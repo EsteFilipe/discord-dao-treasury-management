@@ -1,0 +1,25 @@
+{
+  "name": "discord-dao-treasury-management",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EsteFilipe/discord-dao-treasury-management.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EsteFilipe/discord-dao-treasury-management/issues"
+  },
+  "homepage": "https://github.com/EsteFilipe/discord-dao-treasury-management#readme",
+  "dependencies": {
+    "@enzymefinance/protocol": "^2.0.1",
+    "axios": "^0.21.1",
+    "dotenv-extended": "^2.9.0",
+    "ethers": "^5.0.30"
+  }
+}
