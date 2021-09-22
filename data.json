@@ -1,0 +1,2308 @@
+{
+  "contract": {
+    "address": "0x54bAFF5fe2ED242299A538630754c7185641A0eA",
+    "abi": {
+      "fragments": [
+        {
+          "name": null,
+          "type": "constructor",
+          "inputs": [
+            {
+              "name": "_dispatcher",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_fundDeployer",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_valueInterpreter",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_feeManager",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_integrationManager",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_policyManager",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_primitivePriceFeed",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_synthetixPriceFeed",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_synthetixAddressResolver",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "name": "MigratedSharesDuePaid",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "sharesDue",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        {
+          "name": "OverridePauseSet",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "overridePause",
+              "type": "bool",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        {
+          "name": "PreRedeemSharesHookFailed",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "failureReturnData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            },
+            {
+              "name": "redeemer",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesQuantity",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        {
+          "name": "SharesBought",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "caller",
+              "type": "address",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "buyer",
+              "type": "address",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "investmentAmount",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesIssued",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesReceived",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        {
+          "name": "SharesRedeemed",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "redeemer",
+              "type": "address",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesQuantity",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "receivedAssets",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "receivedAssetQuantities",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        {
+          "name": "VaultProxySet",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "vaultProxy",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "activate",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_vaultProxy",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_isMigration",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "buyShares",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_buyers",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "_investmentAmounts",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "_minSharesQuantities",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "sharesReceivedAmounts_",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "calcGav",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_requireFinality",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "gav_",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "isValid_",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "calcGrossShareValue",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_requireFinality",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "grossShareValue_",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "isValid_",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "callOnExtension",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_extension",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_actionId",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "_callArgs",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "configureExtensions",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_feeManagerConfigData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            },
+            {
+              "name": "_policyManagerConfigData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "destruct",
+          "constant": false,
+          "inputs": [],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getDenominationAsset",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "denominationAsset_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getLibRoutes",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "dispatcher_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "feeManager_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "fundDeployer_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "integrationManager_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "policyManager_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "primitivePriceFeed_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "valueInterpreter_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getOverridePause",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "overridePause_",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getSharesActionTimelock",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "sharesActionTimelock_",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getSynthetixAddressResolver",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "synthetixAddressResolver_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getSynthetixPriceFeed",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "synthetixPriceFeed_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "getVaultProxy",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "vaultProxy_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "init",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_denominationAsset",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_sharesActionTimelock",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "permissionedVaultAction",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_action",
+              "type": "uint8",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint8",
+              "_isParamType": true
+            },
+            {
+              "name": "_actionData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "redeemShares",
+          "constant": false,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "payoutAssets_",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "payoutAmounts_",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "redeemSharesDetailed",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_sharesQuantity",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "_additionalAssets",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "_assetsToSkip",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "payoutAssets_",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "payoutAmounts_",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "setOverridePause",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_nextOverridePause",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        {
+          "type": "function",
+          "name": "vaultCallOnContract",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_contract",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_selector",
+              "type": "bytes4",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes4",
+              "_isParamType": true
+            },
+            {
+              "name": "_encodedArgs",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        }
+      ],
+      "_abiCoder": {
+        "coerceFunc": null
+      },
+      "functions": {
+        "activate(address,bool)": {
+          "type": "function",
+          "name": "activate",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_vaultProxy",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_isMigration",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "buyShares(address[],uint256[],uint256[])": {
+          "type": "function",
+          "name": "buyShares",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_buyers",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "_investmentAmounts",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "_minSharesQuantities",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "sharesReceivedAmounts_",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "calcGav(bool)": {
+          "type": "function",
+          "name": "calcGav",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_requireFinality",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "gav_",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "isValid_",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "calcGrossShareValue(bool)": {
+          "type": "function",
+          "name": "calcGrossShareValue",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_requireFinality",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "grossShareValue_",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "isValid_",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "callOnExtension(address,uint256,bytes)": {
+          "type": "function",
+          "name": "callOnExtension",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_extension",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_actionId",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "_callArgs",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "configureExtensions(bytes,bytes)": {
+          "type": "function",
+          "name": "configureExtensions",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_feeManagerConfigData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            },
+            {
+              "name": "_policyManagerConfigData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "destruct()": {
+          "type": "function",
+          "name": "destruct",
+          "constant": false,
+          "inputs": [],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getDenominationAsset()": {
+          "type": "function",
+          "name": "getDenominationAsset",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "denominationAsset_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getLibRoutes()": {
+          "type": "function",
+          "name": "getLibRoutes",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "dispatcher_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "feeManager_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "fundDeployer_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "integrationManager_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "policyManager_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "primitivePriceFeed_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "valueInterpreter_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getOverridePause()": {
+          "type": "function",
+          "name": "getOverridePause",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "overridePause_",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getSharesActionTimelock()": {
+          "type": "function",
+          "name": "getSharesActionTimelock",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "sharesActionTimelock_",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getSynthetixAddressResolver()": {
+          "type": "function",
+          "name": "getSynthetixAddressResolver",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "synthetixAddressResolver_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getSynthetixPriceFeed()": {
+          "type": "function",
+          "name": "getSynthetixPriceFeed",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "synthetixPriceFeed_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "getVaultProxy()": {
+          "type": "function",
+          "name": "getVaultProxy",
+          "constant": true,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "vaultProxy_",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "view",
+          "gas": null,
+          "_isFragment": true
+        },
+        "init(address,uint256)": {
+          "type": "function",
+          "name": "init",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_denominationAsset",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_sharesActionTimelock",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "permissionedVaultAction(uint8,bytes)": {
+          "type": "function",
+          "name": "permissionedVaultAction",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_action",
+              "type": "uint8",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint8",
+              "_isParamType": true
+            },
+            {
+              "name": "_actionData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "redeemShares()": {
+          "type": "function",
+          "name": "redeemShares",
+          "constant": false,
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "payoutAssets_",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "payoutAmounts_",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "redeemSharesDetailed(uint256,address[],address[])": {
+          "type": "function",
+          "name": "redeemSharesDetailed",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_sharesQuantity",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "_additionalAssets",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "_assetsToSkip",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [
+            {
+              "name": "payoutAssets_",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "payoutAmounts_",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "setOverridePause(bool)": {
+          "type": "function",
+          "name": "setOverridePause",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_nextOverridePause",
+              "type": "bool",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        },
+        "vaultCallOnContract(address,bytes4,bytes)": {
+          "type": "function",
+          "name": "vaultCallOnContract",
+          "constant": false,
+          "inputs": [
+            {
+              "name": "_contract",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "_selector",
+              "type": "bytes4",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes4",
+              "_isParamType": true
+            },
+            {
+              "name": "_encodedArgs",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            }
+          ],
+          "outputs": [],
+          "payable": false,
+          "stateMutability": "nonpayable",
+          "gas": null,
+          "_isFragment": true
+        }
+      },
+      "errors": {},
+      "events": {
+        "MigratedSharesDuePaid(uint256)": {
+          "name": "MigratedSharesDuePaid",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "sharesDue",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        "OverridePauseSet(bool)": {
+          "name": "OverridePauseSet",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "overridePause",
+              "type": "bool",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bool",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        "PreRedeemSharesHookFailed(bytes,address,uint256)": {
+          "name": "PreRedeemSharesHookFailed",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "failureReturnData",
+              "type": "bytes",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "bytes",
+              "_isParamType": true
+            },
+            {
+              "name": "redeemer",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesQuantity",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        "SharesBought(address,address,uint256,uint256,uint256)": {
+          "name": "SharesBought",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "caller",
+              "type": "address",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "buyer",
+              "type": "address",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "investmentAmount",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesIssued",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesReceived",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        "SharesRedeemed(address,uint256,address[],uint256[])": {
+          "name": "SharesRedeemed",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "redeemer",
+              "type": "address",
+              "indexed": true,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            },
+            {
+              "name": "sharesQuantity",
+              "type": "uint256",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "uint256",
+              "_isParamType": true
+            },
+            {
+              "name": "receivedAssets",
+              "type": "address[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "address",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "address",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            },
+            {
+              "name": "receivedAssetQuantities",
+              "type": "uint256[]",
+              "indexed": null,
+              "components": null,
+              "arrayLength": -1,
+              "arrayChildren": {
+                "name": null,
+                "type": "uint256",
+                "indexed": null,
+                "components": null,
+                "arrayLength": null,
+                "arrayChildren": null,
+                "baseType": "uint256",
+                "_isParamType": true
+              },
+              "baseType": "array",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        },
+        "VaultProxySet(address)": {
+          "name": "VaultProxySet",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "vaultProxy",
+              "type": "address",
+              "indexed": null,
+              "components": null,
+              "arrayLength": null,
+              "arrayChildren": null,
+              "baseType": "address",
+              "_isParamType": true
+            }
+          ],
+          "type": "event",
+          "_isFragment": true
+        }
+      },
+      "structs": {},
+      "deploy": {
+        "name": null,
+        "type": "constructor",
+        "inputs": [
+          {
+            "name": "_dispatcher",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_fundDeployer",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_valueInterpreter",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_feeManager",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_integrationManager",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_policyManager",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_primitivePriceFeed",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_synthetixPriceFeed",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          },
+          {
+            "name": "_synthetixAddressResolver",
+            "type": "address",
+            "indexed": null,
+            "components": null,
+            "arrayLength": null,
+            "arrayChildren": null,
+            "baseType": "address",
+            "_isParamType": true
+          }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "gas": null,
+        "_isFragment": true
+      },
+      "_isInterface": true
+    },
+    "__TYPE__": "CONTRACT",
+    "_signer": {
+      "_isSigner": true,
+      "address": "0xD9CE7116e8702E634854918298C55e07C0443598",
+      "provider": {
+        "_isProvider": true,
+        "_events": [],
+        "_emitted": {
+          "block": -2
+        },
+        "formatter": {
+          "formats": {
+            "transaction": {},
+            "transactionRequest": {},
+            "receiptLog": {},
+            "receipt": {},
+            "block": {},
+            "blockWithTransactions": {},
+            "filter": {},
+            "filterLog": {}
+          }
+        },
+        "anyNetwork": false,
+        "_network": {
+          "name": "kovan",
+          "chainId": 42
+        },
+        "_maxInternalBlockNumber": -1024,
+        "_lastBlockNumber": -2,
+        "_pollingInterval": 4000,
+        "_fastQueryDate": 0,
+        "connection": {
+          "url": "https://kovan.infura.io/v3/633009e1c2ba4a87aaf3567ed6570dcc"
+        },
+        "_nextId": 50,
+        "_eventLoopCache": {
+          "detectNetwork": null,
+          "eth_chainId": null
+        }
+      }
+    }
+  },
+  "fragment": {
+    "type": "function",
+    "name": "callOnExtension",
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_extension",
+        "type": "address",
+        "indexed": null,
+        "components": null,
+        "arrayLength": null,
+        "arrayChildren": null,
+        "baseType": "address",
+        "_isParamType": true
+      },
+      {
+        "name": "_actionId",
+        "type": "uint256",
+        "indexed": null,
+        "components": null,
+        "arrayLength": null,
+        "arrayChildren": null,
+        "baseType": "uint256",
+        "_isParamType": true
+      },
+      {
+        "name": "_callArgs",
+        "type": "bytes",
+        "indexed": null,
+        "components": null,
+        "arrayLength": null,
+        "arrayChildren": null,
+        "baseType": "bytes",
+        "_isParamType": true
+      }
+    ],
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "gas": null,
+    "_isFragment": true
+  },
+  "options": {
+    "args": [
+      "0x81198c4b6954cba32d7ace52580bd7a1265dea3f",
+      0,
+      "0x000000000000000000000000667807bbc182d61ba6c0989da4a8da65f0320c7d03e38a2b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000002386f26fc10000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000d0a1e359811322d97991e03f863a0c30c2cf029c0000000000000000000000009be41d202e8a1d7327b2fd860749e41baa89cb6a"
+    ]
+  },
+  "__TYPE__": "FUNCTION:SEND"
+}
