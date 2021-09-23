@@ -1,36 +1,80 @@
 {
-  "name": "discord-dao-treasury-management",
+  "name": "@scaffold-eth/monorepo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "keywords": [
+    "ethereum",
+    "react",
+    "uniswap",
+    "workspaces",
+    "yarn"
+  ],
+  "private": true,
   "scripts": {
-    "codegen": "dotenv -- graphql-codegen --config codegen.yaml && tsc utils/subgraph/subgraph.ts"
+    "react-app:build": "yarn workspace @scaffold-eth/react-app build --max-old-space-size=12288",
+    "react-app:eject": "yarn workspace @scaffold-eth/react-app eject",
+    "react-app:start": "yarn workspace @scaffold-eth/react-app start",
+    "react-app:test": "yarn workspace @scaffold-eth/react-app test",
+    "build": "yarn workspace @scaffold-eth/react-app build --max-old-space-size=12288",
+    "chain": "yarn workspace @scaffold-eth/hardhat chain",
+    "fork": "yarn workspace @scaffold-eth/hardhat fork",
+    "node": "yarn workspace @scaffold-eth/hardhat chain",
+    "test": "yarn workspace @scaffold-eth/hardhat test",
+    "start": "yarn workspace @scaffold-eth/react-app start",
+    "compile": "yarn workspace @scaffold-eth/hardhat compile",
+    "deploy": "yarn workspace @scaffold-eth/hardhat deploy",
+    "verify": "yarn workspace @scaffold-eth/hardhat etherscan-verify", 
+    "watch": "yarn workspace @scaffold-eth/hardhat watch",
+    "accounts": "yarn workspace @scaffold-eth/hardhat accounts",
+    "balance": "yarn workspace @scaffold-eth/hardhat balance",
+    "send": "yarn workspace @scaffold-eth/hardhat send",
+    "ipfs": "yarn workspace @scaffold-eth/react-app ipfs",
+    "surge": "yarn workspace @scaffold-eth/react-app surge",
+    "s3": "yarn workspace @scaffold-eth/react-app s3",
+    "ship": "yarn workspace @scaffold-eth/react-app ship",
+    "generate": "yarn workspace @scaffold-eth/hardhat generate",
+    "account": "yarn workspace @scaffold-eth/hardhat account",
+    "mineContractAddress": "cd packages/hardhat && npx hardhat mineContractAddress",
+    "wallet": "cd packages/hardhat && npx hardhat wallet",
+    "fundedwallet": "cd packages/hardhat && npx hardhat fundedwallet",
+    "flatten": "cd packages/hardhat && npx hardhat flatten",
+    "clean": "cd packages/hardhat && npx hardhat clean",
+    "run-graph-node": "yarn workspace @scaffold-eth/services run-graph-node",
+    "remove-graph-node": "yarn workspace @scaffold-eth/services remove-graph-node",
+    "clean-graph-node": "yarn workspace @scaffold-eth/services clean-graph-node",
+    "graph-prepare": "mustache packages/subgraph/config/config.json packages/subgraph/src/subgraph.template.yaml > packages/subgraph/subgraph.yaml",
+    "graph-codegen": "yarn workspace @scaffold-eth/subgraph graph codegen",
+    "graph-build": "yarn workspace @scaffold-eth/subgraph graph build",
+    "graph-create-local": "yarn workspace @scaffold-eth/subgraph graph create --node http://localhost:8020/ scaffold-eth/your-contract",
+    "graph-remove-local": "yarn workspace @scaffold-eth/subgraph graph remove --node http://localhost:8020/ scaffold-eth/your-contract",
+    "graph-deploy-local": "yarn workspace @scaffold-eth/subgraph graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 scaffold-eth/your-contract",
+    "graph-ship-local": "yarn graph-prepare && yarn graph-codegen && yarn graph-deploy-local",
+    "deploy-and-graph": "yarn deploy && yarn graph-ship-local",
+    "theme": "yarn workspace @scaffold-eth/react-app theme",
+    "watch-theme": "yarn workspace @scaffold-eth/react-app watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/EsteFilipe/discord-dao-treasury-management.git"
+  "workspaces": {
+    "packages": [
+      "packages/hardhat",
+      "packages/react-app",
+      "packages/serverless-infrastructure",
+      "packages/subgraph"
+    ],
+    "nohoist": [
+      "**/eslint",
+      "**/eslint/**",
+      "**/prettier",
+      "**/prettier/**",
+      "**/eslint-plugin-prettier",
+      "**/eslint-plugin-prettier/**",
+      "**/eslint-config-prettier",
+      "**/eslint-config-prettier/**",
+      "**/jest",
+      "**/jest/**",
+      "**/@graphprotocol/graph-ts",
+      "**/@graphprotocol/graph-ts/**",
+      "**/hardhat",
+      "**/hardhat/**"
+    ]
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/EsteFilipe/discord-dao-treasury-management/issues"
-  },
-  "homepage": "https://github.com/EsteFilipe/discord-dao-treasury-management#readme",
-  "dependencies": {
-    "@enzymefinance/protocol": "^2.0.1",
-    "@uniswap/sdk": "^3.0.3",
-    "axios": "^0.21.1",
-    "dotenv-extended": "^2.9.0",
-    "ethers": "^5.0.30",
-    "graphql": "^15.5.0",
-    "graphql-request": "^3.4.0"
-  },
-  "devDependencies": {
-    "@graphql-codegen/cli": "^1.20.0",
-    "@graphql-codegen/typescript": "^1.20.0",
-    "@graphql-codegen/typescript-graphql-request": "^3.0.0",
-    "@graphql-codegen/typescript-operations": "^1.17.13",
-    "dotenv-cli": "^4.0.0",
-    "typescript": "^4.4.3"
-  }
+  "dependencies": {}
 }
