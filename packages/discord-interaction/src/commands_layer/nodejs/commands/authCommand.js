@@ -10,8 +10,8 @@ const JWT_EXPIRATION_TIME = "30m";
 module.exports = class AuthCommand extends SlashCommand {
     constructor(creator) {
         super(creator, {
-          name: "eth-auth",
-          description: "Ethereum authentication",
+          name: "authenticate",
+          description: "Authenticate your wallet address - for vault share owners or for the vault manager",
           guildIDs: [envVariables.DISCORD_SERVER_ID],
         });
         this.filePath = __filename;

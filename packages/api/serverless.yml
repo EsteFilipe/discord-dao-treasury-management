@@ -35,7 +35,7 @@ provider:
       Action:
         - lambda:InvokeFunction
       Resource:
-        - !ImportValue 'DiscordRoleAssignFnArn'
+        - !ImportValue 'DiscordDaoRoleAssignFnArn'
   httpApi:
     cors:
       allowedOrigins:
@@ -61,7 +61,7 @@ custom:
   # Name of the SST app that's deploying our infrastructure
   sstApp: ${self:custom.stage}-scaffold-eth-infra
   customDomain:
-    domainName: ${self:custom.stage}.api.vorder.io
+    domainName: ${self:custom.stage}.dao-api.vorder.io
     basePath: app
     endpointType: regional
     apiType: http
@@ -83,7 +83,9 @@ functions:
   login:
     handler: src/functions/handler.login
     environment:
-      JWT_SECRET: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:jwt_secret}}'
+      JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
+      VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
+      ETHPLORER_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethplorer_key}}'
     events:
       - httpApi:
           path: /v1/sessions

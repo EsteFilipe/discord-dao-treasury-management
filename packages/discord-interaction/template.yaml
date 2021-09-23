@@ -10,12 +10,12 @@ Globals:
     Timeout: 3
 
 Resources:
-  CommandsLayer:
+  DiscordDaoCommandsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
       ContentUri: ./src/commands_layer
 
-  CreateCommandsFunction:
+  DiscordDaoCreateCommandsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/create_commands
@@ -23,28 +23,28 @@ Resources:
       Handler: index.lambdaHandler
       Environment:
         Variables:
-          DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:app_id}}'
-          DISCORD_PUBLIC_KEY: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:public_key}}'
-          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:bot_token}}'
-          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:server_id}}'
-          JWT_SECRET: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:jwt_secret}}'
+          DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:app_id}}'
+          DISCORD_PUBLIC_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:public_key}}'
+          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
+          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
+          JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
       Layers:
-        - !Ref CommandsLayer
+        - !Ref DiscordDaoCommandsLayer
 
-  CreateCommandsInvoker:
-    Type: Custom::CreateCommandsInvoker
+  DiscordDaoCreateCommandsInvoker:
+    Type: Custom::DiscordDaoCreateCommandsInvoker
     Properties:
-      ServiceToken: !GetAtt CreateCommandsFunction.Arn
-      # Passing the CommandsLayer ARN will cause a custom resource update every time the commands are updated.
+      ServiceToken: !GetAtt DiscordDaoCreateCommandsFunction.Arn
+      # Passing the DiscordDaoCommandsLayer ARN will cause a custom resource update every time the commands are updated.
       # (note that the ARN of a LayerVersion Resource ends with an incrementing layer version number)
-      CommandsLayerVersion: !Ref CommandsLayer
+      DiscordDaoCommandsLayerVersion: !Ref DiscordDaoCommandsLayer
 
-  DiscordInteractionApi:
+  DiscordDaoInteractionApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: dev
 
-  DiscordHandlerFunction:
+  DiscordDaoHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/handler
@@ -54,39 +54,40 @@ Resources:
         EthAuth:
           Type: HttpApi
           Properties:
-            ApiId: !Ref DiscordInteractionApi
+            ApiId: !Ref DiscordDaoInteractionApi
             Method: post
             Path: /event
       Environment:
         Variables:
-          DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:app_id}}'
-          DISCORD_PUBLIC_KEY: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:public_key}}'
-          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:bot_token}}'
-          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:server_id}}'
-          JWT_SECRET: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:jwt_secret}}'
+          DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:app_id}}'
+          DISCORD_PUBLIC_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:public_key}}'
+          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
+          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
+          JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
       Layers:
-        - !Ref CommandsLayer
+        - !Ref DiscordDaoCommandsLayer
 
-  DiscordRoleAssignFunction:
+  DiscordDaoRoleAssignFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: discord-role-assign
+      FunctionName: discord-dao-role-assign
       CodeUri: ./src/role_assignment
       Description: "Serverless Function to set the role of a given user on Discord"
       Handler: index.lambdaHandler
       Environment:
         Variables:
-          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:bot_token}}'
-          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:server_id}}'
-          DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:channel_id}}'
-          DISCORD_ROLE_ID: '{{resolve:secretsmanager:/dev/serverless_discord_bot/discord:SecretString:role_id}}'
+          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
+          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
+          DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
+          DISCORD_MANAGER_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:manager_role_id}}'
+          DISCORD_INVESTOR_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:investor_role_id}}'
 
 Outputs:
-  DiscordInteractionApi:
+  DiscordDaoInteractionApi:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${DiscordInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev/event"
+    Value: !Sub "https://${DiscordDaoInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev/event"
   DiscordRoleAssignFnArn:
     Description: "The ARN of the lambda function that assigns the roles on discord. Used to call that function after successful authentication."
-    Value: !GetAtt DiscordRoleAssignFunction.Arn
+    Value: !GetAtt DiscordDaoRoleAssignFunction.Arn
     Export:
-      Name: DiscordRoleAssignFnArn
+      Name: DiscordDaoRoleAssignFnArn
