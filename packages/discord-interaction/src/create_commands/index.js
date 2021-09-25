@@ -78,7 +78,8 @@ function writeEnvVariablesToLayer() {
     const envVariables = {
       DISCORD_SERVER_ID: process.env.DISCORD_SERVER_ID,
       DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
-      JWT_SECRET: process.env.JWT_SECRET
+      JWT_SECRET: process.env.JWT_SECRET,
+      VAULT_ADDRESS: process.env.VAULT_ADDRESS
     };
     fs.writeFileSync(
       "/tmp/.env",

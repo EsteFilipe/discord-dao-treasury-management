@@ -10,12 +10,12 @@ Globals:
     Timeout: 3
 
 Resources:
-  DiscordDaoCommandsLayer:
+  CommandsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
       ContentUri: ./src/commands_layer
 
-  DiscordDaoCreateCommandsFunction:
+  CreateCommandsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/create_commands
@@ -28,23 +28,24 @@ Resources:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
           DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
           JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
+          VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
       Layers:
-        - !Ref DiscordDaoCommandsLayer
+        - !Ref CommandsLayer
 
-  DiscordDaoCreateCommandsInvoker:
-    Type: Custom::DiscordDaoCreateCommandsInvoker
+  CreateCommandsInvoker:
+    Type: Custom::CreateCommandsInvoker
     Properties:
-      ServiceToken: !GetAtt DiscordDaoCreateCommandsFunction.Arn
-      # Passing the DiscordDaoCommandsLayer ARN will cause a custom resource update every time the commands are updated.
+      ServiceToken: !GetAtt CreateCommandsFunction.Arn
+      # Passing the CommandsLayer ARN will cause a custom resource update every time the commands are updated.
       # (note that the ARN of a LayerVersion Resource ends with an incrementing layer version number)
-      DiscordDaoCommandsLayerVersion: !Ref DiscordDaoCommandsLayer
+      CommandsLayerVersion: !Ref CommandsLayer
 
-  DiscordDaoInteractionApi:
+  DiscordInteractionApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: dev
 
-  DiscordDaoHandlerFunction:
+  DiscordHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/handler
@@ -54,7 +55,7 @@ Resources:
         EthAuth:
           Type: HttpApi
           Properties:
-            ApiId: !Ref DiscordDaoInteractionApi
+            ApiId: !Ref DiscordInteractionApi
             Method: post
             Path: /event
       Environment:
@@ -64,13 +65,14 @@ Resources:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
           DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
           JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
+          VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
       Layers:
-        - !Ref DiscordDaoCommandsLayer
+        - !Ref CommandsLayer
 
-  DiscordDaoRoleAssignFunction:
+  DiscordRoleAssignFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: discord-dao-role-assign
+      FunctionName: discord-role-assign
       CodeUri: ./src/role_assignment
       Description: "Serverless Function to set the role of a given user on Discord"
       Handler: index.lambdaHandler
@@ -83,11 +85,11 @@ Resources:
           DISCORD_INVESTOR_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:investor_role_id}}'
 
 Outputs:
-  DiscordDaoInteractionApi:
+  DiscordInteractionApi:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${DiscordDaoInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev/event"
+    Value: !Sub "https://${DiscordInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev/event"
   DiscordRoleAssignFnArn:
     Description: "The ARN of the lambda function that assigns the roles on discord. Used to call that function after successful authentication."
-    Value: !GetAtt DiscordDaoRoleAssignFunction.Arn
+    Value: !GetAtt DiscordRoleAssignFunction.Arn
     Export:
-      Name: DiscordDaoRoleAssignFnArn
+      Name: DiscordRoleAssignFnArn

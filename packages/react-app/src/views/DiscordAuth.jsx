@@ -8,7 +8,8 @@ export default function DiscordAuth({
   userSigner
 }) {
 
-	const [jwt, setJwt] = useState();
+	const [shares, setShares] = useState();
+  const [isOwner, setIsOwner] = useState();
 	const [error, setError] = useState();
 	const [userIdToken, setUserIdToken] = useState()
 
@@ -36,17 +37,21 @@ export default function DiscordAuth({
 								signer: userSigner,
 								userIdToken: userIdToken // This is a JWT which will be decoded in the lambda
 							});
-							if (result.token) {
-              	setJwt(result);
+              if (result.owner) {
+								setIsOwner(result.owner)
 							}
-							else {
+							if (result.shares) {
+              	setShares(result.shares);
+							}
+							if (result.error) {
 								setError(result.error)
 							}
             }}
           >
             Authenticate!
           </Button>
-          {jwt && <div style={{ padding: 16 }}>Success! Go check your new awesome role!</div>}
+          {isOwner && <div style={{ padding: 16 }}><p>You've been authenticated as the owner of the vault.</p></div>}
+          {shares && <div style={{ padding: 16 }}><p>You've been authenticated as an investor.</p><p>You own {shares} shares.</p></div>}
 					{error && <div style={{ padding: 16 }}>Error: {error}</div>}
         </div>
       </div>

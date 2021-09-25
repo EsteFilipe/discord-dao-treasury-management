@@ -30,6 +30,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.11.0",
     "@aws-sdk/s3-request-presigner": "3.11.0",
+    "@enzymefinance/protocol": "^2.0.1",
+    "axios": "^0.21.4",
     "ethers": "^5.0.17",
     "ipfs-only-hash": "4.0.0",
     "jsonwebtoken": "^8.5.1",

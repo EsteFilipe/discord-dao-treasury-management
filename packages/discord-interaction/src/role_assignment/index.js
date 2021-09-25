@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 
 // Note: I'm using Discord.js v12.5.3 because v13 is only compatible with node 16.
-// Lambda currently only allows for node 14.
+// Lambda currently only allows for node 14. 
 
 client.login(process.env.DISCORD_BOT_TOKEN);
 

@@ -6,6 +6,6 @@
     "moduleResolution": "node",
     // Required for Dynamorm
     "experimentalDecorators": true, // required
-    "emitDecoratorMetadata": true // required
+    "emitDecoratorMetadata": true, // required
   }
 }

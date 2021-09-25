@@ -35,7 +35,7 @@ provider:
       Action:
         - lambda:InvokeFunction
       Resource:
-        - !ImportValue 'DiscordDaoRoleAssignFnArn'
+        - !ImportValue 'DiscordRoleAssignFnArn'
   httpApi:
     cors:
       allowedOrigins:
@@ -86,6 +86,7 @@ functions:
       JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
       VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
       ETHPLORER_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethplorer_key}}'
+      ETHEREUM_NODE_ENDPOINT: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethereum_node_endpoint}}'
     events:
       - httpApi:
           path: /v1/sessions
