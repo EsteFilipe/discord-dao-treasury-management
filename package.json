@@ -56,7 +56,7 @@
     "packages": [
       "packages/hardhat",
       "packages/react-app",
-      "packages/serverless-infrastructure",
+      "packages/db-infrastructure",
       "packages/subgraph"
     ],
     "nohoist": [

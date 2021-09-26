@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  enzyme-interaction
+  API to interact with Enzyme Finance Protocol
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    Timeout: 10
+
+Resources:
+  EnzymeInteractionApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: dev
+
+  GetVaultOwnerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/handler
+      Description: "Get the address of the owner of a specific vault"
+      Handler: index.getVaultOwner
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EnzymeInteractionApi
+            Method: get
+            Path: /owner
+      Environment:
+        Variables:
+          ETHEREUM_NODE_ENDPOINT: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethereum_node_endpoint}}'
+
+Outputs:
+  EnzymeInteractionApi:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${EnzymeInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev/"
