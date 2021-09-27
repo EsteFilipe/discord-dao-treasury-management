@@ -2,7 +2,6 @@ const {once} = require('events');
 const CfnLambda = require('cfn-lambda');
 const fs = require("fs");
 
-// included in commands layer
 const {SlashCreator} = require('slash-create');
 
 // match any JS file in commands directory

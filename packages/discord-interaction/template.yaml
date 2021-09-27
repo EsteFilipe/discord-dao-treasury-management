@@ -81,8 +81,6 @@ Resources:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
           DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
           DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
-          DISCORD_MANAGER_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:manager_role_id}}'
-          DISCORD_INVESTOR_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:investor_role_id}}'
 
 Outputs:
   DiscordInteractionApi:

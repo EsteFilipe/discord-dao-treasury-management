@@ -50,8 +50,10 @@ export default function DiscordAuth({
           >
             Authenticate!
           </Button>
-          {isOwner && <div style={{ padding: 16 }}><p>You've been authenticated as the owner of the vault.</p></div>}
-          {shares && <div style={{ padding: 16 }}><p>You've been authenticated as an investor.</p><p>You own {shares} shares.</p></div>}
+          <div style={{ padding: 16 }}>
+            {isOwner && <p>You've been authenticated as the <strong>owner of the vault</strong>.</p>}
+            {shares && <p>You've been authenticated as an <strong>investor</strong>. You own {shares} shares.</p>}
+          </div>
 					{error && <div style={{ padding: 16 }}>Error: {error}</div>}
         </div>
       </div>

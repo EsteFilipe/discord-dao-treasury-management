@@ -85,7 +85,9 @@ functions:
     environment:
       JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
       VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
-      ETHPLORER_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethplorer_key}}'
+      DISCORD_OWNER_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:owner_role_id}}'
+      DISCORD_INVESTOR_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:investor_role_id}}'
+      ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
     events:
       - httpApi:
           path: /v1/sessions

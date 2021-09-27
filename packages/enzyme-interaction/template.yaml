@@ -10,6 +10,11 @@ Globals:
     Timeout: 10
 
 Resources:
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: ./src/dependencies_layer
+
   EnzymeInteractionApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -20,7 +25,7 @@ Resources:
     Properties:
       CodeUri: ./src/handler
       Description: "Get the address of the owner of a specific vault"
-      Handler: index.getVaultOwner
+      Handler: public.getVaultOwner
       Events:
         Get:
           Type: HttpApi
@@ -31,8 +36,31 @@ Resources:
       Environment:
         Variables:
           ETHEREUM_NODE_ENDPOINT: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethereum_node_endpoint}}'
+      Layers:
+        - !Ref DependenciesLayer
 
+  GetSharesBalanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/handler
+      Description: "Get the number of shares that an investor address owns from a specific vault address"
+      Handler: public.getSharesBalance
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EnzymeInteractionApi
+            Method: get
+            Path: /shares-balance
+      Environment:
+        Variables:
+          ETHEREUM_NODE_ENDPOINT: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethereum_node_endpoint}}'
+      Layers:
+        - !Ref DependenciesLayer
+        
 Outputs:
   EnzymeInteractionApi:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${EnzymeInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev/"
+    Value: !Sub "https://${EnzymeInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
+    Export:
+      Name: EnzymeInteractionApi

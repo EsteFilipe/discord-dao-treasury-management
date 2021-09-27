@@ -1,0 +1,22 @@
+{
+  "name": "enzyme-interaction.dependencies_layer",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Filipe Aleixo",
+  "license": "MIT",
+  "dependencies": {
+    "@enzymefinance/protocol": "^2.0.1",
+    "@uniswap/sdk": "^3.0.3",
+    "axios": "^0.21.1",
+    "ethers": "^5.0.30",
+    "graphql": "^15.5.0",
+    "graphql-request": "^3.4.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^1.20.0",
+    "@graphql-codegen/typescript": "^1.20.0",
+    "@graphql-codegen/typescript-graphql-request": "^3.0.0",
+    "@graphql-codegen/typescript-operations": "^1.17.13",
+    "typescript": "^4.4.3"
+  }
+}

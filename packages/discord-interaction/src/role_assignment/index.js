@@ -23,15 +23,14 @@ const waitForClient = () => {
 
 exports.lambdaHandler = async function (event, context) {
   await waitForClient();
-  await assignRole(event.userId, event.publicAddress);
+  await assignRole(event.userId, event.publicAddress, event.roles);
   return;
 };
 
-async function assignRole(userId, publicAddress) {
+async function assignRole(userId, publicAddress, roles) {
   const guild = await client.guilds.fetch(process.env.DISCORD_SERVER_ID);
   const member = await guild.members.fetch(userId);
-    // TODO CHANGE THIS ROLE ACCORDING TO IF IT'S EITHER MANAGER OR INVESTOR
-	await member.roles.add(process.env.DISCORD_INVESTOR_ROLE_ID);
+	await member.roles.add(roles);
 
 	await member.send(
     `Congrats sir, you're now authenticated using Ethereum! Address: ${publicAddress}`

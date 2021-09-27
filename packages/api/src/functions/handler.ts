@@ -1,10 +1,11 @@
 import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { Lambda } from 'aws-sdk';
 import apiResponses from 'src/requests/apiResponses'
 import { authenticate, getAuthenticationChallenge } from '../lib/auth'
 import * as jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { utils } from 'ethers' //providers, Wallet } from 'ethers'
-import { VaultLib } from '@enzymefinance/protocol';
+//import { VaultLib } from '@enzymefinance/protocol';
 
 
 /**
@@ -45,7 +46,6 @@ export async function nonce(
 export async function login(
   event: APIGatewayEvent
 ): Promise<APIGatewayProxyResult> {
-  const AWS = require("aws-sdk");
 
   /*
   const provider = new providers.JsonRpcProvider(
@@ -57,12 +57,12 @@ export async function login(
   const vault = new VaultLib(process.env.VAULT_ADDRESS, wallet);
   */
 
-  const callRoleAssignLambda = async (userId, publicAddress) => {
-    const lambda = new AWS.Lambda({region: "us-east-2"});
+  const callRoleAssignLambda = async (userId, publicAddress, roles) => {
+    const lambda = new Lambda({region: "us-east-2"});
     return new Promise((resolve, reject) => {
       const params = {
         FunctionName: "discord-role-assign",
-        Payload: JSON.stringify({ userId, publicAddress })
+        Payload: JSON.stringify({ userId, publicAddress, roles })
       }
       lambda.invoke(params, (err, results) => {
         if(err) reject(err);
@@ -71,26 +71,18 @@ export async function login(
     })
   }
 
-  const getNumberOfShares = async (publicAddress, vaultAddress) => {
-    const url =
-      "https://kovan-api.ethplorer.io/getAddressInfo/" +
-      publicAddress +
-      "?apiKey=" +
-      process.env.ETHPLORER_KEY;
+  const getNumberOfShares = async (investorAddress, vaultAddress) => {
+    const url = process.env.ENZYME_API_ENDPOINT + 
+    '/shares-balance?vaultAddress=' + vaultAddress +
+    '&investorAddress=' + investorAddress;
 
     try {
       const response = await axios.get(url)
       if (response) {
-        if (Array.isArray(response.data.tokens)) {
-          const tokensInAddress = response.data.tokens
-          const sharesToken = tokensInAddress.find((token) => token.tokenInfo.address === vaultAddress);
-          if (sharesToken != undefined) {
-            // Returns a string
-            return utils.formatUnits(sharesToken.balance.toString(), sharesToken.tokenInfo.decimals);
-          }
-          else return "0" 
+        if (response.data.balance != undefined) {
+          return response.data.balance;
         }
-        else return "0"
+        else return "-1"
       }
       else return "-1";
     }
@@ -99,16 +91,24 @@ export async function login(
     }
   }
 
-  /*
-  const isOwner = async (publicAddress) => {
-    // Check if the address corresponds to the owner of the vault
-    // Note: I'm assuming that the owner doesn't ever change, but it's possible that I'm
-    // not getting the whole story
-    const owner = await vault.getOwner();
-    if (owner === publicAddress) return true;
-    else return false;
+  const isVaultOwner = async (address, vaultAddress) => {
+    const url = process.env.ENZYME_API_ENDPOINT + 
+    '/owner?vaultAddress=' + vaultAddress;
+
+    try {
+      const response = await axios.get(url)
+      if (response) {
+        if (response.data.address != undefined) {
+          return response.data.address.toLowerCase() === address.toLowerCase();
+        }
+        else return "-1"
+      }
+      else return "-1";
+    }
+    catch {
+      return "-1"
+    }
   }
-  */
 
   try {
     const { publicAddress, signature, userIdToken } = JSON.parse(event.body)
@@ -119,29 +119,53 @@ export async function login(
     const decoded = jwt.verify(userIdToken, process.env.JWT_SECRET);
     const userId = decoded.userId;
     // The number of shares that the user owns from this vault
-    const [ shares ] = await Promise.all([
+    const [ shares, isOwner ] = await Promise.all([
       getNumberOfShares(publicAddress, decoded.vaultAddress),
-      // TODO Instead of interacting with enzyme finance's vault from here, create an API dedicated only
-      // to interacting with Enzyme, which will also be directly acessed by the bot to fetch info like balances, investors, etc.
-      //isOwner(publicAddress)
+      isVaultOwner(publicAddress, decoded.vaultAddress)
     ]);
 
-    if(shares === "0") {
-      return apiResponses._400({ error: "User doesn't own any shares from this vault." })
-    }
-    else if (shares === "-1") {
-      return apiResponses._400({ error: "There's been an error getting the number of shares for this user." })
+    // If one of them returned -1, don't allow authentication bc something went wrong
+    const status = shares !== "-1" && isOwner !== "-1";
+
+    if (status) {
+      // If the user doesn't own any shares nor is the owner of the vault, do nothing
+      if (shares == 0 && !isOwner) {
+        return apiResponses._400({ error: "For authentication, the address must own shares from the vault and/or be the vault's owner" })
+      }
+      else {
+        // Doing it always in one single call to make execution time faster
+        if(shares > 0 && isOwner) {
+          // Attribute both investor and owner
+          await callRoleAssignLambda(
+            userId,
+            publicAddress,
+            [process.env.DISCORD_INVESTOR_ROLE_ID, process.env.DISCORD_OWNER_ROLE_ID]
+          );
+          return apiResponses._200({ shares: shares, owner: true })
+        }
+        else if (shares > 0) {
+          // Attribute only investor role
+          await callRoleAssignLambda(
+            userId,
+            publicAddress,
+            [process.env.DISCORD_INVESTOR_ROLE_ID]
+          );
+          return apiResponses._200({ shares: shares, owner: false })
+        }
+        else if (isOwner) {
+          // Attribute only owner role
+          await callRoleAssignLambda(
+            userId,
+            publicAddress,
+            [process.env.DISCORD_OWNER_ROLE_ID]
+          );
+          return apiResponses._200({ shares: "0.0", owner: true })
+        }
+      }
     }
     else {
-      console.log(`Validation successful for userId: ${userId}, with publicAddress: ${publicAddress}.
-      Number of shares from vault ${decoded.vaultAddress}: ${shares}`);
-      // Call the lambda function to assign the role to that user
-      // TODO: make it possible to assign two roles in simultaneous by passing an array of role id's to this lambda
-      const results = await callRoleAssignLambda(userId, publicAddress);
-      // TODO add `owner` field here again when fetching from the other API is done
-      return apiResponses._200({ shares: shares })
+      return apiResponses._400({ error: "There's been an error." })
     }
-
   } catch (e) {
     console.log(`Error: ${e.message}`)
     return apiResponses._400({ error: e.message })
