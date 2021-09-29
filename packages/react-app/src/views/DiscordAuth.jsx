@@ -37,6 +37,7 @@ export default function DiscordAuth({
 								signer: userSigner,
 								userIdToken: userIdToken // This is a JWT which will be decoded in the lambda
 							});
+              console.log(result);
               if (result.owner) {
 								setIsOwner(result.owner)
 							}
@@ -52,7 +53,7 @@ export default function DiscordAuth({
           </Button>
           <div style={{ padding: 16 }}>
             {isOwner && <p>You've been authenticated as the <strong>owner of the vault</strong>.</p>}
-            {shares && <p>You've been authenticated as an <strong>investor</strong>. You own {shares} shares.</p>}
+            {shares > 0 && <p>You've been authenticated as an <strong>investor</strong>. You own {shares} shares.</p>}
           </div>
 					{error && <div style={{ padding: 16 }}>Error: {error}</div>}
         </div>

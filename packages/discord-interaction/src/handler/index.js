@@ -34,7 +34,8 @@ function writeEnvVariablesToLayer() {
     DISCORD_SERVER_ID: process.env.DISCORD_SERVER_ID,
     DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
     JWT_SECRET: process.env.JWT_SECRET,
-    VAULT_ADDRESS: process.env.VAULT_ADDRESS
+    VAULT_ADDRESS: process.env.VAULT_ADDRESS,
+    ENZYME_API_ENDPOINT: process.env.ENZYME_API_ENDPOINT
   };
   fs.writeFileSync("/tmp/.env", JSON.stringify(envVariables));
 }

@@ -73,14 +73,14 @@ export async function login(
 
   const getNumberOfShares = async (investorAddress, vaultAddress) => {
     const url = process.env.ENZYME_API_ENDPOINT + 
-    '/shares-balance?vaultAddress=' + vaultAddress +
+    '/vault-info?field=shares-balance&vaultAddress=' + vaultAddress +
     '&investorAddress=' + investorAddress;
 
     try {
       const response = await axios.get(url)
       if (response) {
-        if (response.data.balance != undefined) {
-          return response.data.balance;
+        if (response.data.balance) {
+          return parseFloat(response.data.balance);
         }
         else return "-1"
       }
@@ -93,12 +93,12 @@ export async function login(
 
   const isVaultOwner = async (address, vaultAddress) => {
     const url = process.env.ENZYME_API_ENDPOINT + 
-    '/owner?vaultAddress=' + vaultAddress;
+    '/vault-info?field=owner&vaultAddress=' + vaultAddress;
 
     try {
       const response = await axios.get(url)
       if (response) {
-        if (response.data.address != undefined) {
+        if (response.data.address) {
           return response.data.address.toLowerCase() === address.toLowerCase();
         }
         else return "-1"
@@ -128,6 +128,7 @@ export async function login(
     const status = shares !== "-1" && isOwner !== "-1";
 
     if (status) {
+      console.log(`Address: ${publicAddress}\nShares: ${shares}\nOwner: ${isOwner}`)
       // If the user doesn't own any shares nor is the owner of the vault, do nothing
       if (shares == 0 && !isOwner) {
         return apiResponses._400({ error: "For authentication, the address must own shares from the vault and/or be the vault's owner" })
@@ -141,7 +142,6 @@ export async function login(
             publicAddress,
             [process.env.DISCORD_INVESTOR_ROLE_ID, process.env.DISCORD_OWNER_ROLE_ID]
           );
-          return apiResponses._200({ shares: shares, owner: true })
         }
         else if (shares > 0) {
           // Attribute only investor role
@@ -150,7 +150,6 @@ export async function login(
             publicAddress,
             [process.env.DISCORD_INVESTOR_ROLE_ID]
           );
-          return apiResponses._200({ shares: shares, owner: false })
         }
         else if (isOwner) {
           // Attribute only owner role
@@ -159,8 +158,8 @@ export async function login(
             publicAddress,
             [process.env.DISCORD_OWNER_ROLE_ID]
           );
-          return apiResponses._200({ shares: "0.0", owner: true })
         }
+        return apiResponses._200({ shares: shares, owner: isOwner })
       }
     }
     else {
