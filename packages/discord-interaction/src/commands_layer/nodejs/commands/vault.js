@@ -1,6 +1,8 @@
-// TODO make these commands only accessible to roled users
-
-const { SlashCommand, CommandOptionType } = require("slash-create");
+const { 
+  SlashCommand,
+  CommandOptionType,
+  ApplicationCommandPermissionType 
+} = require("slash-create");
 const fs = require("fs");
 const axios = require("axios");
 
@@ -13,6 +15,22 @@ module.exports = class VaultCommand extends SlashCommand {
       name: "vault",
       description: "Get information from the vault.",
       guildIDs: [envVariables.DISCORD_SERVER_ID],
+      // Only owner and investors can call
+      defaultPermission: false,
+      permissions: {
+        [envVariables.DISCORD_SERVER_ID]: [
+          {
+            type: ApplicationCommandPermissionType.ROLE,
+            id: envVariables.DISCORD_OWNER_ROLE_ID,
+            permission: true
+          },
+          {
+            type: ApplicationCommandPermissionType.ROLE,
+            id: envVariables.DISCORD_INVESTOR_ROLE_ID,
+            permission: true
+          }
+        ]
+      },
       options: [
         {
           type: CommandOptionType.SUB_COMMAND,

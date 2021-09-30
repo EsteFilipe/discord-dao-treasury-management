@@ -1,13 +1,13 @@
 // Dependencies are installed in the .src/dependencies_layer to save on deployment time
-const ethers = require('ethers');
-const enzymefinance = require('@enzymefinance/protocol');
+const { Wallet, utils, providers } = require('ethers');
+const { VaultLib } = require('@enzymefinance/protocol');
 
-const provider = new ethers.providers.JsonRpcProvider(
+const provider = new providers.JsonRpcProvider(
   process.env.ETHEREUM_NODE_ENDPOINT,
   "kovan"
 );
 // Using random wallet for routes that don't need a specific access to the vault
-const randomWallet = ethers.Wallet.createRandom().connect(provider);
+const randomWallet = Wallet.createRandom().connect(provider);
 
 const SHARES_TOKEN_DECIMALS = 18;
 
@@ -18,18 +18,18 @@ exports.getVaultInfo = async (event, context) => {
   // Get the address of the owner of the vault
   if (field == "owner") {
     const vaultAddress = parameters["vaultAddress"];
-    const vault = new enzymefinance.VaultLib(vaultAddress, randomWallet);
+    const vault = new VaultLib(vaultAddress, randomWallet);
     const owner = await vault.getOwner();
     return {
       statusCode: 200,
       body: JSON.stringify({ address: owner }),
     };
   }
-  // Get the shares balance of a given investor address
+  // Get the shares balance of a given investor address 
   else if (field == "shares-balance") {
     const vaultAddress = parameters["vaultAddress"];
     const investorAddress = parameters["investorAddress"];
-    const vault = new enzymefinance.VaultLib(vaultAddress, randomWallet);
+    const vault = new VaultLib(vaultAddress, randomWallet);
     const balance = await vault.balanceOf(investorAddress);
     return {
       statusCode: 200,
@@ -41,5 +41,5 @@ exports.getVaultInfo = async (event, context) => {
 };
 
 function hexAmountToDecimal(hexAmount, decimals) {
-  return ethers.utils.formatUnits(hexAmount, decimals);
+  return utils.formatUnits(hexAmount, decimals);
 }

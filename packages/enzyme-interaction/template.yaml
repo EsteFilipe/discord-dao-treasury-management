@@ -20,7 +20,7 @@ Resources:
     Properties:
       StageName: dev
 
-  GetVaultOwnerFunction:
+  GetVaultInfoFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/handler
