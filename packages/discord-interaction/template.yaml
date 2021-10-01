@@ -7,9 +7,16 @@ Description: >
 Globals:
   Function:
     Runtime: nodejs14.x
-    Timeout: 10
+    # Must return response for slash commands in 3 secs, but after the response
+    # the lambda can keep running to do stuff that's missing
+    Timeout: 15
 
 Resources:
+  #EventBridgeBus:
+  #  Type: AWS::Events::EventBus
+  #  Properties:
+  #    Name: discord-bus
+
   CommandsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -59,10 +66,25 @@ Resources:
       CodeUri: ./src/command_handler
       Description: "Serverless Function to handle incoming Discord requests"
       Handler: index.lambdaHandler
-      #Policies: 
-      #  - LambdaInvokePolicy:
-      #      FunctionName:
-      #        !Ref DiscordPollResultsFunction
+      Policies:
+      - Statement:
+        - Sid: EventBridgePutRulePolicy
+          Effect: Allow
+          Action:
+            - events:PutRule
+            - events:PutTargets
+          Resource: 
+            #- !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+            # Didn't check if it's possible to use regex for resource names in policies. 
+            # If it is, would be best to allow only the rules with names started with `poll-results-rule-` 
+            # (the rest of the name is a dynamic id based on timestamp)
+            - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/*"
+        - Sid: LambdaAddPermissionPolicy
+          Effect: Allow
+          Action:
+            - lambda:AddPermission
+          Resource:
+            - !GetAtt DiscordPollResultsFunction.Arn
       Events:
         EthAuth:
           Type: HttpApi
@@ -81,7 +103,8 @@ Resources:
           JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
           VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
           ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
-          DISCORD_POLL_RESULTS_FUNCTION: !Ref DiscordPollResultsFunction
+          DISCORD_POLL_RESULTS_FUNCTION_ARN: !GetAtt DiscordPollResultsFunction.Arn
+          #EVENT_BUS_NAME: !Ref EventBridgeBus
       Layers:
         - !Ref CommandsLayer
 

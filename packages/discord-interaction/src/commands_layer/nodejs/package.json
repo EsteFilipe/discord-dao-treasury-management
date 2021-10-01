@@ -6,6 +6,7 @@
   "dependencies": {
     "axios": "^0.21.4",
     "jsonwebtoken": "^8.5.1",
-    "slash-create": "^4.2.0"
+    "slash-create": "^4.2.0",
+    "uuid": "^8.3.2"
   }
 }
