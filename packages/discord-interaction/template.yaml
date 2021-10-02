@@ -28,10 +28,6 @@ Resources:
       CodeUri: ./src/create_commands
       Description: "Function to create Discord Slash Commands"
       Handler: index.lambdaHandler
-      #Policies: 
-      #  - LambdaInvokePolicy:
-      #      FunctionName:
-      #        !Ref DiscordPollResultsFunction
       Environment:
         Variables:
           DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:app_id}}'
@@ -43,7 +39,6 @@ Resources:
           JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
           VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
           ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
-          DISCORD_POLL_RESULTS_FUNCTION: !Ref DiscordPollResultsFunction
       Layers:
         - !Ref CommandsLayer
 
@@ -66,6 +61,52 @@ Resources:
       CodeUri: ./src/command_handler
       Description: "Serverless Function to handle incoming Discord requests"
       Handler: index.lambdaHandler
+      # This Lambda will send the poll message and schedule the counting
+      Policies:
+        - LambdaInvokePolicy: 
+            FunctionName: !Ref DiscordPollStartFunction
+      Events:
+        EthAuth:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref DiscordInteractionApi
+            Method: post
+            Path: /event
+      Environment:
+        Variables:
+          DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:app_id}}'
+          DISCORD_PUBLIC_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:public_key}}'
+          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
+          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
+          DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
+          DISCORD_OWNER_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:owner_role_id}}'
+          DISCORD_INVESTOR_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:investor_role_id}}'
+          JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
+          VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
+          ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
+      Layers:
+        - !Ref CommandsLayer
+
+  DiscordRoleAssignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: discord-role-assign
+      CodeUri: ./src/role_assignment
+      Description: "Serverless Function to set the role of a given user on Discord"
+      Handler: index.lambdaHandler
+      Environment:
+        Variables:
+          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
+          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
+          DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
+        
+  DiscordPollStartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: discord-poll-start
+      CodeUri: ./src/polls
+      Description: "Serverless Function to start a poll on Discord and schedule the function to do the counting of the votes."
+      Handler: index.startPoll
       Policies:
       - Statement:
         - Sid: EventBridgePutRulePolicy
@@ -84,50 +125,23 @@ Resources:
           Action:
             - lambda:AddPermission
           Resource:
-            - !GetAtt DiscordPollResultsFunction.Arn
-      Events:
-        EthAuth:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref DiscordInteractionApi
-            Method: post
-            Path: /event
+            - !GetAtt DiscordPollResolveFunction.Arn
       Environment:
         Variables:
-          DISCORD_APP_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:app_id}}'
-          DISCORD_PUBLIC_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:public_key}}'
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
-          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
-          DISCORD_OWNER_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:owner_role_id}}'
-          DISCORD_INVESTOR_ROLE_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:investor_role_id}}'
-          JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
-          VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
-          ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
-          DISCORD_POLL_RESULTS_FUNCTION_ARN: !GetAtt DiscordPollResultsFunction.Arn
-          #EVENT_BUS_NAME: !Ref EventBridgeBus
-      Layers:
-        - !Ref CommandsLayer
+          DISCORD_POLL_RESOLVE_FUNCTION_ARN: !GetAtt DiscordPollResolveFunction.Arn
 
-  DiscordRoleAssignFunction:
+  DiscordPollResolveFunction:
     Type: AWS::Serverless::Function
     Properties:
-      #FunctionName: discord-role-assign
-      CodeUri: ./src/role_assignment
-      Description: "Serverless Function to set the role of a given user on Discord"
-      Handler: index.lambdaHandler
-      Environment:
-        Variables:
-          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
-          DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
-          DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
-        
-  DiscordPollResultsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-  #    FunctionName: discord-poll-results
-      CodeUri: ./src/poll_results
-      Description: "Serverless Function to count the results of a Discord poll and invoke the Enzyme Interaction API to execute the results."
-      Handler: index.lambdaHandler
+      FunctionName: discord-poll-resolve
+      CodeUri: ./src/polls
+      Description: >
+        Serverless Function to count the votes in the poll initiated by `DiscordPollStartFunction`. 
+        Once the votes are counted, the Enzyme Interaction API will be triggered to do an action according to the poll result.
+      Handler: index.resolvePoll
+      # TODO will need permission here to call enzyme-interaction API
+      #Policies:
       Environment:
         Variables:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
@@ -141,5 +155,5 @@ Outputs:
   DiscordRoleAssignFnArn:
     Description: "The ARN of the lambda function that assigns the roles on discord. Used to call that function after successful authentication."
     Value: !GetAtt DiscordRoleAssignFunction.Arn
-    #Export:
-    #  Name: DiscordRoleAssignFnArn
+    Export:
+      Name: DiscordRoleAssignFnArn

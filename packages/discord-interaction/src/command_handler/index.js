@@ -32,14 +32,13 @@ function writeEnvVariablesToLayer() {
   // Layers can't access environment variables directly, so I'm using this hack
   const envVariables = {
     DISCORD_SERVER_ID: process.env.DISCORD_SERVER_ID,
+    DISCORD_CHANNEL_ID: process.env.DISCORD_CHANNEL_ID,
     DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
     DISCORD_OWNER_ROLE_ID: process.env.DISCORD_OWNER_ROLE_ID,
     DISCORD_INVESTOR_ROLE_ID: process.env.DISCORD_INVESTOR_ROLE_ID,
     JWT_SECRET: process.env.JWT_SECRET,
     VAULT_ADDRESS: process.env.VAULT_ADDRESS,
     ENZYME_API_ENDPOINT: process.env.ENZYME_API_ENDPOINT,
-    DISCORD_POLL_RESULTS_FUNCTION_ARN:
-      process.env.DISCORD_POLL_RESULTS_FUNCTION_ARN
   };
   fs.writeFileSync("/tmp/.env", JSON.stringify(envVariables));
 }

@@ -57,7 +57,7 @@ export async function login(
   const vault = new VaultLib(process.env.VAULT_ADDRESS, wallet);
   */
 
-  const callRoleAssignLambda = async (userId, publicAddress, roles) => {
+  const invokeRoleAssignLambda = async (userId, publicAddress, roles) => {
     const lambda = new Lambda({region: "us-east-2"});
     return new Promise((resolve, reject) => {
       const params = {
@@ -137,7 +137,7 @@ export async function login(
         // Doing it always in one single call to make execution time faster
         if(shares > 0 && isOwner) {
           // Attribute both investor and owner
-          await callRoleAssignLambda(
+          await invokeRoleAssignLambda(
             userId,
             publicAddress,
             [process.env.DISCORD_INVESTOR_ROLE_ID, process.env.DISCORD_OWNER_ROLE_ID]
@@ -145,7 +145,7 @@ export async function login(
         }
         else if (shares > 0) {
           // Attribute only investor role
-          await callRoleAssignLambda(
+          await invokeRoleAssignLambda(
             userId,
             publicAddress,
             [process.env.DISCORD_INVESTOR_ROLE_ID]
@@ -153,7 +153,7 @@ export async function login(
         }
         else if (isOwner) {
           // Attribute only owner role
-          await callRoleAssignLambda(
+          await invokeRoleAssignLambda(
             userId,
             publicAddress,
             [process.env.DISCORD_OWNER_ROLE_ID]

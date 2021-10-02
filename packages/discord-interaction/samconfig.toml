@@ -2,8 +2,8 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "dev-discord-dao-interaction2"
+stack_name = "dev-discord-dao-interaction"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-q9hln2sd11fa"
-s3_prefix = "dev-discord-dao-interaction2"
+s3_prefix = "dev-discord-dao-interaction"
 region = "us-east-2"
 capabilities = "CAPABILITY_IAM"
