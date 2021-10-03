@@ -27,7 +27,6 @@ const waitForClient = () => {
 };
 
 exports.startPoll = async function (event, context) {
-  console.log(JSON.stringify(event, null, 2));
   await waitForClient();
 
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
@@ -38,31 +37,42 @@ exports.startPoll = async function (event, context) {
     .setColor(0xff0000)
     // Set the main content of the embed
     .setDescription("Form this string with the parameters introduced in the slash command.");
-
-  const message = await client.channels.cache.get(event.channelID).send(embed);
   
-  //await scheduleResultsCounting({
-  //  messageID: message.id
-  //});
+  const message = await client.channels.cache
+    .get(event.channelID)
+    .send(JSON.stringify(event));
+  
+  await scheduleResultsCounting(message.id, event.pollParams);
 
   return true;
 };
 
 exports.resolvePoll = async function (event, context) {
-  console.log("Resolve poll.");
+  await waitForClient();
+  const message = await client.channels.cache
+    .get(event.channelID)
+    .messages.fetch(event.messageID);
+
+  await message.reply("reply works!!")
+  
+  console.log(`CONTEXT ${JSON.stringify(context)}`);
+  console.log(`EVENT ${JSON.stringify(event)}`);
+  // Clean up the scheduling rule
+  await deleteEventBridgeRule(event.eventBridgeRuleName);
   return true;
 };
 
-// Schedule the Lambda function which will count the results
-async function scheduleResultsCounting(params) {
+// Schedule the Lambda function that will count the poll results
+async function scheduleResultsCounting(messageID, pollParams) {
   const ruleName = `poll-results-rule-${uuidv1()}`;
+  const cronExpression = getScheduleCron(pollParams.duration);
   // Create EventBridge rule
   // This will use the default event bus
   // TODO Clean up the rule once it has ran
   const rule = await eventBridge
     .putRule({
       Name: ruleName,
-      ScheduleExpression: "cron(0/1 * * * ? *)",
+      ScheduleExpression: cronExpression,
     })
     .promise();
 
@@ -72,7 +82,7 @@ async function scheduleResultsCounting(params) {
     lambda
       .addPermission({
         Action: "lambda:InvokeFunction",
-        FunctionName: envVariables.DISCORD_POLL_RESOLVE_FUNCTION_ARN,
+        FunctionName: process.env.DISCORD_POLL_RESOLVE_FUNCTION_ARN,
         Principal: "events.amazonaws.com",
         StatementId: ruleName,
         SourceArn: rule.RuleArn,
@@ -86,8 +96,12 @@ async function scheduleResultsCounting(params) {
         Targets: [
           {
             Id: `${ruleName}-target`,
-            Arn: envVariables.DISCORD_POLL_RESOLVE_FUNCTION_ARN,
-            Input: `{ "data": "${JSON.stringify(params.messageID)}" }`,
+            Arn: process.env.DISCORD_POLL_RESOLVE_FUNCTION_ARN,
+            Input: JSON.stringify({
+              eventBridgeRuleName: ruleName,
+              messageID,
+              pollParams,
+            }),
           },
         ],
       })
@@ -95,4 +109,54 @@ async function scheduleResultsCounting(params) {
   ]);
 
   return true;
+}
+
+// Get the corresponding cron expression for N minutes from now
+// Cron format for AWS here:
+// https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html
+function getScheduleCron (minutes) {
+    var currentDate = new Date();
+    var scheduleDate = new Date();
+    scheduleDate.setTime(currentDate.getTime() + (minutes * 60 * 1000));
+    
+    // EventBridge doesn't provide second-level precision in schedule expressions.
+    // The finest resolution using a cron expression is one minute. 
+    const cronMinutes = scheduleDate.getMinutes(),
+      cronHours = scheduleDate.getHours(),
+      cronDayOfMonth = scheduleDate.getDate(),
+      cronMonth = scheduleDate.getMonth() + 1, // cron is 1-12 for months
+      cronDayOfWeek = "?", // cron code for any
+      cronYear = scheduleDate.getFullYear();
+        
+    const cronExpression =
+      `cron(` +
+      `${cronMinutes} ` +
+      `${cronHours} ` +
+      `${cronDayOfMonth} ` +
+      `${cronMonth} ` +
+      `${cronDayOfWeek} ` +
+      `${cronYear}` +
+      `)`;
+    
+    return cronExpression
+}
+
+async function deleteEventBridgeRule(ruleName) {
+  // Delete all the target from the rule
+  await eventBridge
+    .removeTargets({
+      Ids: [`${ruleName}-target`],
+      Rule: ruleName,
+      Force: true, // just in case, not sure if required here
+    })
+    .promise();
+  // Delete the rule
+  await eventBridge
+    .deleteRule({
+      Name: ruleName,
+      Force: true,
+    })
+    .promise();
+
+  return;
 }

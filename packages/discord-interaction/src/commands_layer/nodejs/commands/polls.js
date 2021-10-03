@@ -46,6 +46,9 @@ module.exports = class PollCommand extends SlashCommand {
               name: "token-ticker-sell",
               description: "The ticker of the token to sell (string).",
               required: true,
+              // Note: an option holds a maximum of 25 choices, so it's not feasible
+              // to fetch all the available tokens to trade from the graph and dump them here.
+              // To make all the tokens available, this field must be open-ended and receive a string.
               choices: [
                 {
                   name: "WETH",
@@ -110,8 +113,20 @@ module.exports = class PollCommand extends SlashCommand {
 
   async run(ctx) {
     try {
-      const res = await invokePollStartLambda();
-      ctx.send("The poll creation has been requested.", {
+      var pollParams = {};
+      if (ctx.options["yes-no"]) {
+        pollParams.pollType = "yes-no";
+        for(var k in ctx.options["yes-no"]) 
+          pollParams[k] = ctx.options["yes-no"][k];
+      }
+      else if (ctx.options["choose-token"]) {
+        pollParams.pollType = "choose-token";
+        for (var k in ctx.options["choose-token"])
+          pollParams[k] = ctx.options["choose-token"][k];
+      }
+      const res = await invokePollStartLambda(pollParams);
+      //ctx.send("The poll creation has been requested.", {
+      ctx.send(JSON.stringify(pollParams), {
         ephemeral: true,
       });
     }
@@ -123,12 +138,13 @@ module.exports = class PollCommand extends SlashCommand {
   }
 };
 
-function invokePollStartLambda() {
+function invokePollStartLambda(pollParams) {
   return new Promise((resolve, reject) => {
     const params = {
       FunctionName: "discord-poll-start",
       InvokeArgs: JSON.stringify({
-        channelID: envVariables.DISCORD_CHANNEL_ID
+        channelID: envVariables.DISCORD_CHANNEL_ID,
+        pollParams
       }),
     };
     // invokeAsync - we don't wait for the lambda to finish running,

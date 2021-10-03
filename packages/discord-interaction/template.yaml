@@ -141,7 +141,16 @@ Resources:
         Once the votes are counted, the Enzyme Interaction API will be triggered to do an action according to the poll result.
       Handler: index.resolvePoll
       # TODO will need permission here to call enzyme-interaction API
-      #Policies:
+      Policies:
+      - Statement:
+        - Sid: EventBridgeRemoveRulePolicy
+          Effect: Allow
+          Action:
+            - events:DeleteRule
+            - events:RemoveTargets
+          Resource: 
+            # Same as in `DiscordPollStartFunction`, would be best to define resource with regex
+            - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/*"
       Environment:
         Variables:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
