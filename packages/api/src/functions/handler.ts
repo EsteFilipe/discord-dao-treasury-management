@@ -6,6 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { utils } from 'ethers' //providers, Wallet } from 'ethers'
 //import { VaultLib } from '@enzymefinance/protocol';
+import { updateEnzymeAuthenticated } from '../models/authentication'
 
 
 /**
@@ -25,8 +26,13 @@ export async function nonce(
   console.log(parameters)
 
   const publicAddress = parameters['PublicAddress']
+  const userIdToken = parameters['userIdToken']
+
+  const decoded = jwt.verify(userIdToken, process.env.JWT_SECRET);
+  const discordUserID = decoded.userId;
+
   try {
-    const nonce = await getAuthenticationChallenge(publicAddress)
+    const nonce = await getAuthenticationChallenge(publicAddress, discordUserID)
     return apiResponses._200({ nonce })
   } catch (e) {
     return apiResponses._400({ error: e.message })
@@ -57,12 +63,12 @@ export async function login(
   const vault = new VaultLib(process.env.VAULT_ADDRESS, wallet);
   */
 
-  const invokeRoleAssignLambda = async (userId, publicAddress, roles) => {
+  const invokeRoleAssignLambda = async (discordUserID, publicAddress, roles) => {
     const lambda = new Lambda({region: "us-east-2"});
     return new Promise((resolve, reject) => {
       const params = {
         FunctionName: "discord-role-assign",
-        Payload: JSON.stringify({ userId, publicAddress, roles })
+        Payload: JSON.stringify({ discordUserID, publicAddress, roles })
       }
       lambda.invoke(params, (err, results) => {
         if(err) reject(err);
@@ -111,13 +117,20 @@ export async function login(
   }
 
   try {
-    const { publicAddress, signature, userIdToken } = JSON.parse(event.body)
+    const eventData = JSON.parse(event.body)
 
-    const token = await authenticate(publicAddress, signature)
+    const 
+      publicAddress : string = eventData.publicAddress,
+      signature : string = eventData.signature,
+      userIdToken : string = eventData.userIdToken;
+
     // If no error was thrown, let's decode the JWT the user gave us (the one they received from Discord)
     // and get the respective Discord user ID and Enzyme vault address
     const decoded = jwt.verify(userIdToken, process.env.JWT_SECRET);
-    const userId = decoded.userId;
+    const discordUserID = decoded.userId;
+
+    const token = await authenticate(publicAddress, signature, discordUserID)
+
     // The number of shares that the user owns from this vault
     const [ shares, isOwner ] = await Promise.all([
       getNumberOfShares(publicAddress, decoded.vaultAddress),
@@ -138,7 +151,7 @@ export async function login(
         if(shares > 0 && isOwner) {
           // Attribute both investor and owner
           await invokeRoleAssignLambda(
-            userId,
+            discordUserID,
             publicAddress,
             [process.env.DISCORD_INVESTOR_ROLE_ID, process.env.DISCORD_OWNER_ROLE_ID]
           );
@@ -146,7 +159,7 @@ export async function login(
         else if (shares > 0) {
           // Attribute only investor role
           await invokeRoleAssignLambda(
-            userId,
+            discordUserID,
             publicAddress,
             [process.env.DISCORD_INVESTOR_ROLE_ID]
           );
@@ -154,11 +167,16 @@ export async function login(
         else if (isOwner) {
           // Attribute only owner role
           await invokeRoleAssignLambda(
-            userId,
+            discordUserID,
             publicAddress,
             [process.env.DISCORD_OWNER_ROLE_ID]
           );
         }
+        // Doing this just to enforce that it's a boolean. Truth be told `getNumberOfShares` and `isVaultOwner` should be refactored
+        // to return consistent types, but I'm running short on time.
+        const owner = !!isOwner;
+        // TODO Possible to parallelize this with the calls to avoid wasting time
+        await updateEnzymeAuthenticated({ publicAddress, discordUserID, owner, shares });
         return apiResponses._200({ shares: shares, owner: isOwner })
       }
     }

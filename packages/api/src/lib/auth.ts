@@ -7,7 +7,7 @@ import {
   createProfile,
   getNonce,
   updateNonce,
-} from '../models/scaffoldFunctions'
+} from '../models/authentication'
 
 const recoverSignature = (nonce: string, signature: string) => {
   const msg = `LET ME IN!!! ${nonce}`
@@ -19,7 +19,8 @@ const recoverSignature = (nonce: string, signature: string) => {
 
 export const authenticate = async (
   publicAddress: string,
-  signature: string
+  signature: string,
+  discordUserID: string
 ) => {
   const nonce = await getNonce({ publicAddress })
   if (!nonce) throw new Error('User not found')
@@ -38,16 +39,18 @@ export const authenticate = async (
   }
 }
 
-export const getAuthenticationChallenge = async (publicAddress: string) => {
+export const getAuthenticationChallenge = async (publicAddress: string, discordUserID: string) => {
   let nonce
 
+  // Check if the pair PK: discordUserID / SK: publicAddress is in the table
   nonce = await getNonce({ publicAddress })
   console.log({ nonce })
 
+  // If not, create the record
   if (!nonce) {
     await createProfile({ publicAddress })
   }
-
+  
   nonce = await updateNonce({ publicAddress })
   return nonce
 }

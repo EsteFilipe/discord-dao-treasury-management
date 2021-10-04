@@ -31,6 +31,7 @@ module.exports = class VaultCommand extends SlashCommand {
           }
         ]
       },
+      //  TODO change to choices instead of having subcommands
       options: [
         {
           type: CommandOptionType.SUB_COMMAND,

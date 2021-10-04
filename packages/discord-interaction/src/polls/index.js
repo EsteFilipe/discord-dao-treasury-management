@@ -1,6 +1,7 @@
 const { Lambda, EventBridge } = require("aws-sdk");
 const { v1: uuidv1 } = require("uuid");
 const { Client: DiscordClient, MessageEmbed } = require("discord.js");
+require("discord-reply"); // Enables replies with decorator (only available on discord.js v13)
 
 const eventBridge = new EventBridge();
 const lambda = new Lambda();
@@ -28,7 +29,24 @@ const waitForClient = () => {
 
 exports.startPoll = async function (event, context) {
   await waitForClient();
+  const pollExpirationDate = getPollExpirationDate(event.pollParams.duration);
+  // Create poll and add the vote reactions
+  const embed = getStartPollEmbed(event.pollParams, pollExpirationDate);
+  const message = await client.channels.cache.get(event.channelID).send(embed);
+  await addPollVoteReactions(message, event.pollParams);
+  
+  // Schedule the votes counting and subsequent eventbridge clean-up
+  await scheduleResultsCounting(
+    message.id,
+    event.channelID,
+    event.pollParams,
+    pollExpirationDate
+  );
 
+  return true
+};
+
+function getStartPollEmbed(pollParams, pollExpirationDate) {
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
   const embed = new MessageEmbed()
     // Set the title of the field
@@ -36,16 +54,42 @@ exports.startPoll = async function (event, context) {
     // Set the color of the embed
     .setColor(0xff0000)
     // Set the main content of the embed
-    .setDescription("Form this string with the parameters introduced in the slash command.");
-  
-  const message = await client.channels.cache
-    .get(event.channelID)
-    .send(JSON.stringify(event));
-  
-  await scheduleResultsCounting(message.id, event.pollParams);
+    .setDescription("Yes/No vote for the following trade parameters.")
+    .addFields(
+      {
+        name: "Poll Duration:",
+        value: `${pollParams.duration} minutes`,
+      },
+      {
+        name: "Ticker of the token to sell:",
+        value: pollParams["token-sell-ticker"],
+      },
+      {
+        name: "Amount of the token to sell:",
+        value: pollParams["token-sell-amount"],
+      },
+      {
+        name: "Ticker of the token to buy:",
+        value: pollParams["token-buy-ticker"],
+      },
+      { name: "\u200B", value: "\u200B" }, // Empty space
+      { name: "Vote Yes", value: "👍", inline: true },
+      { name: "Vote No", value: "👎", inline: true },
+      { name: "\u200B", value: "\u200B" },
+    )
+    .setFooter(`Expires ${pollExpirationDate}`);
+  return embed
+}
 
-  return true;
-};
+async function addPollVoteReactions(message, pollParams) {
+  if (pollParams.pollType === "yes-no") {
+    await message.react("👍");
+    await message.react("👎");
+  }
+  else if (pollParams.pollType === "choose-token") {
+  }
+  return true
+}
 
 exports.resolvePoll = async function (event, context) {
   await waitForClient();
@@ -53,22 +97,40 @@ exports.resolvePoll = async function (event, context) {
     .get(event.channelID)
     .messages.fetch(event.messageID);
 
-  await message.reply("reply works!!")
+  await message.lineReplyNoMention("Ran lambda to resolve poll.");
   
   console.log(`CONTEXT ${JSON.stringify(context)}`);
   console.log(`EVENT ${JSON.stringify(event)}`);
   // Clean up the scheduling rule
   await deleteEventBridgeRule(event.eventBridgeRuleName);
-  return true;
+  return true
 };
 
+function getResolvePollEmbed(pollParams) {
+  // https://discord.js.org/#/docs/main/master/class/MessageEmbed
+  const embed = new MessageEmbed()
+    // Set the title of the field
+    .setTitle("DAO Treasury Poll")
+    // Set the color of the embed
+    .setColor(0xff0000)
+    // Set the main content of the embed
+    .setDescription(
+      "Form this string with the parameters introduced in the slash command."
+    );
+  return embed;
+}
+
 // Schedule the Lambda function that will count the poll results
-async function scheduleResultsCounting(messageID, pollParams) {
+async function scheduleResultsCounting(
+  messageID,
+  channelID,
+  pollParams,
+  scheduleDate
+) {
   const ruleName = `poll-results-rule-${uuidv1()}`;
-  const cronExpression = getScheduleCron(pollParams.duration);
+  const cronExpression = getScheduleCron(scheduleDate);
   // Create EventBridge rule
   // This will use the default event bus
-  // TODO Clean up the rule once it has ran
   const rule = await eventBridge
     .putRule({
       Name: ruleName,
@@ -100,6 +162,7 @@ async function scheduleResultsCounting(messageID, pollParams) {
             Input: JSON.stringify({
               eventBridgeRuleName: ruleName,
               messageID,
+              channelID,
               pollParams,
             }),
           },
@@ -111,14 +174,17 @@ async function scheduleResultsCounting(messageID, pollParams) {
   return true;
 }
 
+function getPollExpirationDate(minutes) {
+  var currentDate = new Date();
+  var expirationDate = new Date();
+  expirationDate.setTime(currentDate.getTime() + minutes * 60 * 1000);
+  return expirationDate
+}
+
 // Get the corresponding cron expression for N minutes from now
 // Cron format for AWS here:
 // https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html
-function getScheduleCron (minutes) {
-    var currentDate = new Date();
-    var scheduleDate = new Date();
-    scheduleDate.setTime(currentDate.getTime() + (minutes * 60 * 1000));
-    
+function getScheduleCron (scheduleDate) {
     // EventBridge doesn't provide second-level precision in schedule expressions.
     // The finest resolution using a cron expression is one minute. 
     const cronMinutes = scheduleDate.getMinutes(),
@@ -158,5 +224,5 @@ async function deleteEventBridgeRule(ruleName) {
     })
     .promise();
 
-  return;
+  return true
 }

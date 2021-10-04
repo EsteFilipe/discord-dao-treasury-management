@@ -43,7 +43,7 @@ module.exports = class PollCommand extends SlashCommand {
             },
             {
               type: CommandOptionType.STRING,
-              name: "token-ticker-sell",
+              name: "token-sell-ticker",
               description: "The ticker of the token to sell (string).",
               required: true,
               // Note: an option holds a maximum of 25 choices, so it's not feasible
@@ -72,7 +72,7 @@ module.exports = class PollCommand extends SlashCommand {
             },
             {
               type: CommandOptionType.STRING,
-              name: "token-ticker-buy",
+              name: "token-buy-ticker",
               description: "The ticker of the token to buy (string).",
               required: true,
               choices: [

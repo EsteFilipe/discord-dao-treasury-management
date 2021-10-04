@@ -1,3 +1,4 @@
+import { Owner } from '@aws-sdk/client-s3'
 import { DynamoDB } from 'aws-sdk'
 import { randomBytes } from 'crypto'
 
@@ -11,19 +12,17 @@ const generateNonce = async () => {
 
 const tableName = process.env.DYNAMODB_TABLE
 
-// Merchant Profiles
-interface CreateProfileParams {
-  publicAddress: string
-}
+// TODO there are several steps here in the table operations that are unnecessary, fix that.
 
-export const createProfile = async (params: CreateProfileParams) => {
+export const createProfile = async (params: { publicAddress: string }) => {
   const queryParams: DynamoDB.DocumentClient.PutItemInput = {
     TableName: tableName,
     Item: {
-      PK: `USER#${params.publicAddress}`,
-      SK: `#PROFILE#${params.publicAddress}`,
+      PublicAddress: params.publicAddress, //Primary Key
       CreatedAt: new Date().toISOString(),
+      UpdatedAt: new Date().toISOString(),
       Nonce: await generateNonce(),
+      Authenticated: false
     },
   }
 
@@ -37,8 +36,7 @@ export const getNonce = (params: { publicAddress: string }) => {
   const queryParams: DynamoDB.DocumentClient.GetItemInput = {
     TableName: tableName,
     Key: {
-      PK: `USER#${params.publicAddress}`,
-      SK: `#PROFILE#${params.publicAddress}`,
+      PublicAddress: params.publicAddress,
     },
     ProjectionExpression: 'Nonce',
   }
@@ -54,12 +52,35 @@ export const updateNonce = async (params: { publicAddress: string }) => {
   const queryParams: DynamoDB.DocumentClient.UpdateItemInput = {
     TableName: tableName,
     Key: {
-      PK: `USER#${params.publicAddress}`,
-      SK: `#PROFILE#${params.publicAddress}`,
+      PublicAddress: params.publicAddress
     },
-    UpdateExpression: 'set Nonce = :n',
+    UpdateExpression: 'SET Nonce = :nonce',
     ExpressionAttributeValues: {
-      ':n': newNonce,
+      ':nonce': newNonce,
+    },
+    ReturnValues: 'UPDATED_NEW',
+  }
+  console.log({ queryParams })
+  return documentClient
+    .update(queryParams)
+    .promise()
+    .then((data) => data.Attributes.Nonce)
+}
+
+export const updateEnzymeAuthenticated = async (params: 
+  { publicAddress: string, discordUserID: string, owner: boolean, shares: number }) => {
+  const queryParams: DynamoDB.DocumentClient.UpdateItemInput = {
+    TableName: tableName,
+    Key: {
+      PublicAddress: params.publicAddress,
+    },
+    UpdateExpression: 'SET Authenticated = :authenticated, DiscordUserID = :discordUserID, VaultOwner = :owner, VaultShares = :shares, UpdatedAt = :currentDate',
+    ExpressionAttributeValues: {
+      ':authenticated': true,
+      ':discordUserID': params.discordUserID,
+      ':owner': params.owner,
+      ':shares': params.shares,
+      ':currentDate': new Date().toISOString()
     },
     ReturnValues: 'UPDATED_NEW',
   }

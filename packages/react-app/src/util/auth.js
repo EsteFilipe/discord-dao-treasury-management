@@ -5,7 +5,10 @@ export const login = async ({ signer, userIdToken }) => {
   const address = await signer.getAddress();
   console.log({ address });
 
-  const nonceResult = await apiRequest({ path: `v1/sessions?PublicAddress=${address}`, method: "GET" });
+  const nonceResult = await apiRequest({
+    path: `v1/sessions?PublicAddress=${address}&userIdToken=${userIdToken}`,
+    method: "GET",
+  });
 
   const nonce = nonceResult.nonce;
   console.log({ nonce });

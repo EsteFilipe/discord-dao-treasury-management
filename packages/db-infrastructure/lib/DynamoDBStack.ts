@@ -8,10 +8,11 @@ export default class DynamoDBStack extends sst.Stack {
 
     const table = new dynamodb.Table(this, "Table", {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Use on-demand billing mode
-      partitionKey: { name: "PK", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "SK", type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: "PublicAddress", type: dynamodb.AttributeType.STRING },
+      //sortKey: { name: "SK", type: dynamodb.AttributeType.STRING },
     });
 
+    /*
     table.addGlobalSecondaryIndex({
       indexName: 'SK_GSI',
       partitionKey: { name: "SK", type: dynamodb.AttributeType.STRING},
@@ -30,6 +31,7 @@ export default class DynamoDBStack extends sst.Stack {
       partitionKey: { name: "TokenId", type: dynamodb.AttributeType.STRING},
       projectionType: dynamodb.ProjectionType.ALL
     })
+    */
 
     // Output values
     new CfnOutput(this, "TableName", {

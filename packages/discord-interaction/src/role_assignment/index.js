@@ -23,18 +23,17 @@ const waitForClient = () => {
 
 exports.lambdaHandler = async function (event, context) {
   await waitForClient();
-  await assignRole(event.userId, event.publicAddress, event.roles);
+  await assignRole(event.discordUserID, event.publicAddress, event.roles);
   return;
 };
 
-async function assignRole(userId, publicAddress, roles) {
+async function assignRole(discordUserID, publicAddress, roles) {
   const guild = await client.guilds.fetch(process.env.DISCORD_SERVER_ID);
-  const member = await guild.members.fetch(userId);
-	await member.roles.add(roles);
+  const member = await guild.members.fetch(discordUserID);
+  await member.roles.add(roles);
 
-	await member.send(
+  await member.send(
     `Congrats sir, you're now authenticated using Ethereum! Address: ${publicAddress}`
   );
-	return true;
-
+  return true;
 }

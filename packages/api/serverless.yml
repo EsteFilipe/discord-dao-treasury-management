@@ -80,6 +80,8 @@ functions:
       - httpApi:
           path: /v1/sessions
           method: get
+    environment:
+      JWT_SECRET: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:jwt_secret}}'
   login:
     handler: src/functions/handler.login
     environment:
