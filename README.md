@@ -11,3 +11,4 @@ The functionalities I currently have in mind include:
 # Future
 
 - On-chain voting using https://docs.openzeppelin.com/contracts/4.x/governance
+- Update messages every time an investor sells or buys shares
