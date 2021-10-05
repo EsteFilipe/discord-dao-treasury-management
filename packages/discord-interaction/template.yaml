@@ -126,10 +126,19 @@ Resources:
             - lambda:AddPermission
           Resource:
             - !GetAtt DiscordPollResolveFunction.Arn
+        # TODO REMOVE
+        - Sid: DynamoAccessPolicy0
+          Effect: Allow
+          Action:
+            - dynamodb:Scan
+          Resource:
+            - !ImportValue 'dev-scaffold-eth-infra-TableArn'
       Environment:
         Variables:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
           DISCORD_POLL_RESOLVE_FUNCTION_ARN: !GetAtt DiscordPollResolveFunction.Arn
+          # TODO REMOVE
+          DYNAMODB_TABLE: !ImportValue 'dev-scaffold-eth-infra-TableName'
 
   DiscordPollResolveFunction:
     Type: AWS::Serverless::Function
@@ -151,11 +160,23 @@ Resources:
           Resource: 
             # Same as in `DiscordPollStartFunction`, would be best to define resource with regex
             - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/*"
+        - Sid: DynamoAccessPolicy
+          Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:BatchGetItem
+            - dynamodb:UpdateItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+          Resource:
+            - !ImportValue 'dev-scaffold-eth-infra-TableArn'
       Environment:
         Variables:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
           DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
           DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
+          DYNAMODB_TABLE: !ImportValue 'dev-scaffold-eth-infra-TableName'
 
 Outputs:
   DiscordInteractionApi:

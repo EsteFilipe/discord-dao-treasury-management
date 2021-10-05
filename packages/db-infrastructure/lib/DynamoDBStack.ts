@@ -25,13 +25,15 @@ export default class DynamoDBStack extends sst.Stack {
       sortKey: { name: "PK", type: dynamodb.AttributeType.STRING},
       projectionType: dynamodb.ProjectionType.ALL
     })
-
+    */
+    /*
     table.addGlobalSecondaryIndex({
-      indexName: 'TOKEN_ID',
-      partitionKey: { name: "TokenId", type: dynamodb.AttributeType.STRING},
+      indexName: 'UPDATED_AT',
+      partitionKey: { name: "UpdatedAt", type: dynamodb.AttributeType.STRING},
       projectionType: dynamodb.ProjectionType.ALL
     })
     */
+
 
     // Output values
     new CfnOutput(this, "TableName", {

@@ -2,6 +2,7 @@ const { Lambda, EventBridge } = require("aws-sdk");
 const { v1: uuidv1 } = require("uuid");
 const { Client: DiscordClient, MessageEmbed } = require("discord.js");
 require("discord-reply"); // Enables replies with decorator (only available on discord.js v13)
+const { getDiscordUserPublicAddress } = require("./models/authentication");
 
 const eventBridge = new EventBridge();
 const lambda = new Lambda();
@@ -29,12 +30,13 @@ const waitForClient = () => {
 
 exports.startPoll = async function (event, context) {
   await waitForClient();
+
   const pollExpirationDate = getPollExpirationDate(event.pollParams.duration);
   // Create poll and add the vote reactions
   const embed = getStartPollEmbed(event.pollParams, pollExpirationDate);
   const message = await client.channels.cache.get(event.channelID).send(embed);
   await addPollVoteReactions(message, event.pollParams);
-  
+
   // Schedule the votes counting and subsequent eventbridge clean-up
   await scheduleResultsCounting(
     message.id,
@@ -43,7 +45,7 @@ exports.startPoll = async function (event, context) {
     pollExpirationDate
   );
 
-  return true
+  return true;
 };
 
 function getStartPollEmbed(pollParams, pollExpirationDate) {
@@ -93,17 +95,34 @@ async function addPollVoteReactions(message, pollParams) {
 
 exports.resolvePoll = async function (event, context) {
   await waitForClient();
+
+  // DEBUG
+  // When I tried, the results actually always came ordered by UpdatedAt,
+  // but since I'm not sure if that's granted to happen (as I'm not defining order
+  // in "./models/authentication"), I'm filtering for the maximum here
+  //const data = await getDiscordUserPublicAddress("657360013509263374");
+  //const publicAddress = getLatestAddress(data.Items);
+  //console.log(data);
+  //console.log(`LATEST: ${publicAddress}`);
+  // DEBUG
+
   const message = await client.channels.cache
     .get(event.channelID)
     .messages.fetch(event.messageID);
 
-  await message.lineReplyNoMention("Ran lambda to resolve poll.");
-  
+  const userReactions = await getUsersThatReactedWith(message, ["👍", "👎"]);
+  console.log(JSON.stringify(userReactions));
+  const reactionScores = await getReactionScores(userReactions);
+  console.log(JSON.stringify(reactionScores));
+  //DEBUG
+
+  await message.lineReplyNoMention(JSON.stringify(userReactions));
+
   console.log(`CONTEXT ${JSON.stringify(context)}`);
   console.log(`EVENT ${JSON.stringify(event)}`);
   // Clean up the scheduling rule
   await deleteEventBridgeRule(event.eventBridgeRuleName);
-  return true
+  return true;
 };
 
 function getResolvePollEmbed(pollParams) {
@@ -226,3 +245,112 @@ async function deleteEventBridgeRule(ruleName) {
 
   return true
 }
+
+function getAddressByDiscordUserID(discordUserID) {
+
+}
+
+// Given all the addresses that a certain discord user ID has registered in the database,
+// get the one that the user authenticated most recently
+function getLatestAddress(addresses) {
+  var maxDate = new Date(0);
+  var latestAddressIndex = 0;
+
+  addresses.map(function (obj, index) {
+    updatedDate = new Date(obj.UpdatedAt);
+    if (updatedDate > maxDate) {
+      maxDate = updatedDate;
+      latestAddressIndex = index;
+    }
+  });
+  return addresses[latestAddressIndex].PublicAddress;
+}
+
+// Get array of objects with reactions to a specific message
+// Each object has an emoji identifier and a list of users that reacted with that emoji
+async function getUsersThatReactedWith(message, emojis) {
+  // Loop through all the emojis and return an array of objects where each one has
+  // the respective emoji and a promise with the users
+  const allReactionsPromises = emojis.map(async (emoji) => {
+    return {
+      emoji: emoji,
+      // Note: the maximum number of users to fetch like this is 100. Didn't look further on how to
+      // get an unlimited number of users
+      // https://discord.js.org/#/docs/main/12.5.3/class/ReactionUserManager?scrollTo=fetch
+      users: await message.reactions.resolve(emoji).users.fetch({ limit: 100 }),
+    };
+  });
+
+  // return promise that will resolve once the fetching of all the users for the different emojis has finished
+  return Promise.all(allReactionsPromises);
+}
+
+// Loop through all the reaction emojis, fetch the number of shares that each user has and calculate a score
+// for each reaction
+/*
+async function getReactionScores(userReactions) {
+  const reactionsWithSharesPromises = userReactions.map(async (reactions) => {
+    return {
+      emoji: reactions.emoji,
+      shares: reactions.users.filter(user => {
+        // Remove the reactions from the bot
+        return user.username !== "dao-treasury-management";
+      }).map(async (user) => {
+        return {
+          user: user.username,
+          // Just to test that the recursive promise all works
+          shares: await sleep(1, user.id)
+        }
+      })
+    };
+  })
+  // I have nested promises here in the users field and need to wait for those to finish
+  var reactionsWithShares = await recursiveObjectPromiseAll(reactionsWithSharesPromises);
+  return reactionsWithShares;
+}
+*/
+async function getReactionScores(userReactions) {
+  const reactionsWithSharesPromises = userReactions.map(async (reactions) => {
+    return {
+      emoji: reactions.emoji,
+      shares: reactions.users.map(async (user) => {
+        return {
+          username: user.username,
+          // Just to test that the recursive promise all works
+          shares: await sleep(1, user.id),
+        };
+      }),
+    };
+  });
+  // I have nested promises here in the users field and need to wait for those to finish
+  return recursiveObjectPromiseAll(
+    reactionsWithSharesPromises
+  );
+}
+
+function sleep(time, userID) {
+  return new Promise((resolve) => setTimeout(resolve(userID), time));
+}
+
+// From https://gist.github.com/voxpelli/2c9b58e5fef9ed46a2cbfef21416d0e2
+const zipObject = function (keys, values) {
+  const result = {};
+  keys.forEach((key, i) => {
+    result[key] = values[i];
+  });
+  return result;
+};
+
+const recursiveObjectPromiseAll = function (obj) {
+  const keys = Object.keys(obj);
+  return Promise.all(
+    keys.map((key) => {
+      const value = obj[key];
+      // Promise.resolve(value) !== value should work, but !value.then always works
+      if (typeof value === "object" && !value.then) {
+        return recursiveObjectPromiseAll(value);
+      }
+      return value;
+    })
+  ).then((result) => zipObject(keys, result));
+};
