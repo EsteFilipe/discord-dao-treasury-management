@@ -1,4 +1,5 @@
 const { Lambda, EventBridge } = require("aws-sdk");
+const axios = require("axios");
 const { v1: uuidv1 } = require("uuid");
 const { Client: DiscordClient, MessageEmbed } = require("discord.js");
 require("discord-reply"); // Enables replies with decorator (only available on discord.js v13)
@@ -97,13 +98,8 @@ exports.resolvePoll = async function (event, context) {
   await waitForClient();
 
   // DEBUG
-  // When I tried, the results actually always came ordered by UpdatedAt,
-  // but since I'm not sure if that's granted to happen (as I'm not defining order
-  // in "./models/authentication"), I'm filtering for the maximum here
-  //const data = await getDiscordUserPublicAddress("657360013509263374");
-  //const publicAddress = getLatestAddress(data.Items);
-  //console.log(data);
-  //console.log(`LATEST: ${publicAddress}`);
+  console.log(`CONTEXT ${JSON.stringify(context)}`);
+  console.log(`EVENT ${JSON.stringify(event)}`);
   // DEBUG
 
   const message = await client.channels.cache
@@ -114,28 +110,86 @@ exports.resolvePoll = async function (event, context) {
   console.log(JSON.stringify(userReactions));
   const reactionScores = await getReactionScores(userReactions);
   console.log(JSON.stringify(reactionScores));
-  //DEBUG
+  //await message.lineReplyNoMention(JSON.stringify(reactionScores));
 
-  await message.lineReplyNoMention(JSON.stringify(userReactions));
+  // Now, the way we will act upon the results will depend on the poll type:
+  if (event.pollParams.pollType == "yes-no") {
+    reactionScores.forEach(async (reactions) =>{
+      if (reactions.emoji == "👍") {
+        // If we had a score for 👍 higher than 50, proceed with the trade
+        if (reactions.normalizedScore > 50.0) {
+          // TODO call enzyme trade function and also pass the execution status to pass
+          // whether the trade was successful or not to put in the embed message
+          //const tradeStatus = ...
+          const embed = getResolvePollEmbed(
+            event.pollParams,
+            true,
+            reactionScores
+          );
+          await message.lineReplyNoMention(embed);
+        }
+        // Else do nothing
+        else {
+          const embed = getResolvePollEmbed(
+            event.pollParams,
+            false,
+            reactionScores
+          );
+          await message.lineReplyNoMention(embed);
+        }
+      }
+    });
+  }
+  else if (event.pollParams.pollType == "choose-token") {
+  }
 
-  console.log(`CONTEXT ${JSON.stringify(context)}`);
-  console.log(`EVENT ${JSON.stringify(event)}`);
-  // Clean up the scheduling rule
-  await deleteEventBridgeRule(event.eventBridgeRuleName);
+  // Clean up
+  await Promise.all([
+    // Remove the permission for event bridge to call this lambda
+    // TODO - getting circular dependency error when I try to give access to this in template.yaml
+    /*
+    lambda
+      .removePermission({
+        FunctionName: context.functionName,
+        StatementId: event.eventBridgeRuleName,
+      })
+      .promise(),
+    */
+    // Delete the event bridge rule to call the lambda
+    deleteEventBridgeRule(event.eventBridgeRuleName),
+  ]);
   return true;
 };
 
-function getResolvePollEmbed(pollParams) {
+function getResolvePollEmbed(pollParams, outcome, voteDetails) {
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
   const embed = new MessageEmbed()
     // Set the title of the field
-    .setTitle("DAO Treasury Poll")
+    .setTitle("DAO Treasury Poll Results")
     // Set the color of the embed
-    .setColor(0xff0000)
+    .setColor(0x0000ff)
     // Set the main content of the embed
-    .setDescription(
-      "Form this string with the parameters introduced in the slash command."
+  if (pollParams.pollType == "yes-no") {
+    embed.setDescription("Yes/No vote").addFields(
+      {
+        name: "Parameters:",
+        value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for ${pollParams["token-buy-ticker"]}.`,
+      },
+      {
+        name: "Outcome:",
+        value: outcome ? "Execute trade." : "Don't execute trade.",
+      },
+      {
+        name: "Trade succeeded?",
+        value: "Put trade status here"
+      },
+      { name: "\u200B", value: "\u200B" }, // Empty space
+      {
+        name: "Full vote details:",
+        value: JSON.stringify(voteDetails, null, 2),
+      }
     );
+  }
   return embed;
 }
 
@@ -246,10 +300,6 @@ async function deleteEventBridgeRule(ruleName) {
   return true
 }
 
-function getAddressByDiscordUserID(discordUserID) {
-
-}
-
 // Given all the addresses that a certain discord user ID has registered in the database,
 // get the one that the user authenticated most recently
 function getLatestAddress(addresses) {
@@ -285,72 +335,86 @@ async function getUsersThatReactedWith(message, emojis) {
   return Promise.all(allReactionsPromises);
 }
 
+async function getSharesFromDiscordUserID(discordUserID) {
+  // 1. Get all the authenticated addresses from the user
+  const publicAddresses = await getDiscordUserPublicAddress(discordUserID);
+  console.log(`---->>>> HERE USER: ${discordUserID}`);
+  console.log(publicAddresses);
+
+  if (publicAddresses.Count > 0) {
+    // 2. Get the latest address
+    const publicAddress = getLatestAddress(publicAddresses.Items);
+    console.log(`LATEST ADDRESS: ${publicAddress}`);
+    // 3. Call the enzyme API to get the balance of that address
+    const url =
+      process.env.ENZYME_API_ENDPOINT +
+      "/vault-info?field=shares-balance&vaultAddress=" +
+      process.env.VAULT_ADDRESS +
+      "&investorAddress=" +
+      publicAddress;
+    console.log(url);
+
+    try {
+      const response = await axios.get(url);
+      if (response) {
+        if (response.data.balance) {
+          return parseFloat(response.data.balance);
+        } else return 0;
+      } else return 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+  // If the user voted but doesn't have any authenticated addresses, return that they own 0 shares
+  else return 0;
+}
+
 // Loop through all the reaction emojis, fetch the number of shares that each user has and calculate a score
 // for each reaction
-/*
 async function getReactionScores(userReactions) {
-  const reactionsWithSharesPromises = userReactions.map(async (reactions) => {
-    return {
-      emoji: reactions.emoji,
-      shares: reactions.users.filter(user => {
-        // Remove the reactions from the bot
-        return user.username !== "dao-treasury-management";
-      }).map(async (user) => {
-        return {
-          user: user.username,
-          // Just to test that the recursive promise all works
-          shares: await sleep(1, user.id)
-        }
-      })
-    };
-  })
-  // I have nested promises here in the users field and need to wait for those to finish
-  var reactionsWithShares = await recursiveObjectPromiseAll(reactionsWithSharesPromises);
+  // We have a nested map, and since Promise.all is not recursive, we need
+  // to also enclose the outer map in a Promise.all
+  //https://stackoverflow.com/questions/69457404/how-to-await-promise-function-inside-nested-maps/69457482#69457482
+  const reactionsWithShares = await Promise.all(
+    userReactions.map(async (reactions) => {
+      return {
+        emoji: reactions.emoji,
+        shares: await Promise.all(
+          reactions.users
+            .filter((user) => {
+              // Don't consider the initial bot votes
+              return user.username !== "dao-treasury-management";
+            })
+            .map(async (user) => {
+              return {
+                username: user.username,
+                // Just as an example of something to wait for
+                shares: await getSharesFromDiscordUserID(user.id),
+              };
+            })
+        ),
+      };
+    })
+  );
+  
+  // Count the share scores
+  var totalShares = 0;
+  reactionsWithShares.forEach((reactions, i) => {
+    reactionsWithShares[i].score = 0;
+    reactions.shares.forEach((shares) => {
+      reactionsWithShares[i].score += shares.shares;
+      totalShares += shares.shares;
+    });
+  });
+
+  // Get the normalized scores
+  reactionsWithShares.forEach((reactions, i) => {
+    // Normalized scores are floats [0, 100], with 2 decimal places
+    reactionsWithShares[i].normalizedScore = 
+    (reactionsWithShares[i].score / totalShares * 100).toFixed(2);
+  });
+
+  console.log(`TOTAL SHARES: ${totalShares}`);
+
   return reactionsWithShares;
 }
-*/
-async function getReactionScores(userReactions) {
-  const reactionsWithSharesPromises = userReactions.map(async (reactions) => {
-    return {
-      emoji: reactions.emoji,
-      shares: reactions.users.map(async (user) => {
-        return {
-          username: user.username,
-          // Just to test that the recursive promise all works
-          shares: await sleep(1, user.id),
-        };
-      }),
-    };
-  });
-  // I have nested promises here in the users field and need to wait for those to finish
-  return recursiveObjectPromiseAll(
-    reactionsWithSharesPromises
-  );
-}
-
-function sleep(time, userID) {
-  return new Promise((resolve) => setTimeout(resolve(userID), time));
-}
-
-// From https://gist.github.com/voxpelli/2c9b58e5fef9ed46a2cbfef21416d0e2
-const zipObject = function (keys, values) {
-  const result = {};
-  keys.forEach((key, i) => {
-    result[key] = values[i];
-  });
-  return result;
-};
-
-const recursiveObjectPromiseAll = function (obj) {
-  const keys = Object.keys(obj);
-  return Promise.all(
-    keys.map((key) => {
-      const value = obj[key];
-      // Promise.resolve(value) !== value should work, but !value.then always works
-      if (typeof value === "object" && !value.then) {
-        return recursiveObjectPromiseAll(value);
-      }
-      return value;
-    })
-  ).then((result) => zipObject(keys, result));
-};
