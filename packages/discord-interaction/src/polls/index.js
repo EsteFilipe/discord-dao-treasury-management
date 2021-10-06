@@ -97,6 +97,10 @@ async function addPollVoteReactions(message, pollParams) {
 exports.resolvePoll = async function (event, context) {
   await waitForClient();
 
+  // TODO REMOVE
+  await executeEnzymeTrade();
+  // TODO REMOVE
+
   // DEBUG
   console.log(`CONTEXT ${JSON.stringify(context)}`);
   console.log(`EVENT ${JSON.stringify(event)}`);
@@ -114,7 +118,7 @@ exports.resolvePoll = async function (event, context) {
 
   // Now, the way we will act upon the results will depend on the poll type:
   if (event.pollParams.pollType == "yes-no") {
-    reactionScores.forEach(async (reactions) =>{
+    reactionScores.forEach(async (reactions) => {
       if (reactions.emoji == "👍") {
         // If we had a score for 👍 higher than 50, proceed with the trade
         if (reactions.normalizedScore > 50.0) {
@@ -139,27 +143,36 @@ exports.resolvePoll = async function (event, context) {
         }
       }
     });
-  }
-  else if (event.pollParams.pollType == "choose-token") {
+  } else if (event.pollParams.pollType == "choose-token") {
   }
 
   // Clean up
   await Promise.all([
     // Remove the permission for event bridge to call this lambda
-    // TODO - getting circular dependency error when I try to give access to this in template.yaml
-    /*
     lambda
       .removePermission({
         FunctionName: context.functionName,
         StatementId: event.eventBridgeRuleName,
       })
       .promise(),
-    */
     // Delete the event bridge rule to call the lambda
     deleteEventBridgeRule(event.eventBridgeRuleName),
   ]);
   return true;
 };
+
+function executeEnzymeTrade() {
+  return new Promise((resolve, reject) => {
+    const params = {
+      FunctionName: process.env.ENZYME_EXECUTE_TRADE_FUNCTION_ARN,
+      Payload: JSON.stringify("HELLO"),
+    };
+    lambda.invoke(params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results.Payload);
+    });
+  });
+}
 
 function getResolvePollEmbed(pollParams, outcome, voteDetails) {
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed

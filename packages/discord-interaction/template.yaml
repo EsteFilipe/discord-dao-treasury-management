@@ -151,19 +151,25 @@ Resources:
           Resource: 
             # Same as in `DiscordPollStartFunction`, would be best to define resource with regex
             - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/*"
-        # TODO CIRCULAR PERMISSION ERROR
-        #- Sid: LambdaRemovePermissionPolicy
-        #  Effect: Allow
-        #  Action:
-        #    - lambda:RemovePermission
-        #  Resource:
-        #    - !Ref DiscordPollResolveFunction
+        - Sid: LambdaRemovePermissionPolicy
+          Effect: Allow
+          Action:
+            - lambda:RemovePermission
+          Resource:
+            # Doing it this way here because with !GetAtt for ARN it throws a circular dependency error
+            - !Sub "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:discord-poll-resolve"
         - Sid: DynamoAccessPolicy
           Effect: Allow
           Action:
             - dynamodb:Scan
           Resource:
             - !ImportValue 'dev-scaffold-eth-infra-TableArn'
+        - Sid: LambdaInvokePolicy
+          Effect: Allow
+          Action:
+            - lambda:InvokeFunction
+          Resource: 
+            - !ImportValue 'EnzymeExecuteTradeFunctionArn'
       Environment:
         Variables:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
@@ -172,6 +178,7 @@ Resources:
           DYNAMODB_TABLE: !ImportValue 'dev-scaffold-eth-infra-TableName'
           VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
           ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
+          ENZYME_EXECUTE_TRADE_FUNCTION_ARN: !ImportValue 'EnzymeExecuteTradeFunctionArn'
 
 Outputs:
   DiscordInteractionApi:

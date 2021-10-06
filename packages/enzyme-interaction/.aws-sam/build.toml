@@ -6,6 +6,6 @@ codeuri = "C:\\git_projects\\discord-dao-treasury-management\\packages\\enzyme-i
 runtime = "nodejs14.x"
 source_md5 = ""
 packagetype = "Zip"
-functions = ["GetVaultInfoFunction"]
+functions = ["GetVaultInfoFunction", "ExecuteTradeFunction"]
 
 [layer_build_definitions]

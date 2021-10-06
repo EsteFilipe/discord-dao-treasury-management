@@ -55,12 +55,24 @@ module.exports = class PollCommand extends SlashCommand {
                   value: "WETH",
                 },
                 {
-                  name: "WBTC",
-                  value: "WBTC",
+                  name: "BAT",
+                  value: "BAT",
                 },
                 {
-                  name: "REN",
-                  value: "REN",
+                  name: "BNB",
+                  value: "BNB",
+                },
+                {
+                  name: "SNX",
+                  value: "SNX",
+                },
+                {
+                  name: "UNI",
+                  value: "UNI",
+                },
+                {
+                  name: "USDT",
+                  value: "USDT",
                 },
               ],
             },
@@ -81,12 +93,24 @@ module.exports = class PollCommand extends SlashCommand {
                   value: "WETH",
                 },
                 {
-                  name: "WBTC",
-                  value: "WBTC",
+                  name: "BAT",
+                  value: "BAT",
                 },
                 {
-                  name: "REN",
-                  value: "REN",
+                  name: "BNB",
+                  value: "BNB",
+                },
+                {
+                  name: "SNX",
+                  value: "SNX",
+                },
+                {
+                  name: "UNI",
+                  value: "UNI",
+                },
+                {
+                  name: "USDT",
+                  value: "USDT",
                 },
               ],
             },

@@ -38,6 +38,20 @@ Resources:
           ETHEREUM_NODE_ENDPOINT: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethereum_node_endpoint}}'
       Layers:
         - !Ref DependenciesLayer
+
+  ExecuteTradeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/handler
+      Description: "Get information about the vault"
+      Handler: protected.executeTrade
+      Environment:
+        Variables:
+          VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
+          ETHEREUM_NODE_ENDPOINT: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:ethereum_node_endpoint}}'
+          VAULT_OWNER_ETH_PRIVATE_KEY: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_owner_eth_private_key}}'
+      Layers:
+        - !Ref DependenciesLayer
         
 Outputs:
   EnzymeInteractionApi:
@@ -45,3 +59,8 @@ Outputs:
     Value: !Sub "https://${EnzymeInteractionApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
     Export:
       Name: EnzymeInteractionApi
+  EnzymeExecuteTradeFunctionArn:
+    Description: "The ARN of the Lambda function which executes trades on the Enzyme vault"
+    Value: !GetAtt ExecuteTradeFunction.Arn
+    Export:
+      Name: EnzymeExecuteTradeFunctionArn
