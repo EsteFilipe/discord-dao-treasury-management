@@ -9,6 +9,8 @@ const eventBridge = new EventBridge();
 const lambda = new Lambda();
 const client = new DiscordClient();
 
+const ETHERSCAN_TX_URL = "https://kovan.etherscan.io/tx/";
+
 // Note: I'm using Discord.js v12.5.3 because v13 is only compatible with node 16.
 // Lambda currently only allows for node 14.
 
@@ -97,13 +99,9 @@ async function addPollVoteReactions(message, pollParams) {
 exports.resolvePoll = async function (event, context) {
   await waitForClient();
 
-  // TODO REMOVE
-  await executeEnzymeTrade();
-  // TODO REMOVE
-
   // DEBUG
-  console.log(`CONTEXT ${JSON.stringify(context)}`);
-  console.log(`EVENT ${JSON.stringify(event)}`);
+  //console.log(`CONTEXT ${JSON.stringify(context)}`);
+  //console.log(`EVENT ${JSON.stringify(event)}`);
   // DEBUG
 
   const message = await client.channels.cache
@@ -118,31 +116,41 @@ exports.resolvePoll = async function (event, context) {
 
   // Now, the way we will act upon the results will depend on the poll type:
   if (event.pollParams.pollType == "yes-no") {
-    reactionScores.forEach(async (reactions) => {
+    // TODO merge the 2 objects in the array into a single one with emoji key
+    // to avoid doing this loop
+    for (reactions of reactionScores) {
       if (reactions.emoji == "👍") {
         // If we had a score for 👍 higher than 50, proceed with the trade
         if (reactions.normalizedScore > 50.0) {
-          // TODO call enzyme trade function and also pass the execution status to pass
-          // whether the trade was successful or not to put in the embed message
-          //const tradeStatus = ...
-          const embed = getResolvePollEmbed(
-            event.pollParams,
-            true,
-            reactionScores
-          );
-          await message.lineReplyNoMention(embed);
+          try{
+            const tradeDetails = await executeEnzymeTrade({
+              "token-buy-ticker": event.pollParams["token-buy-ticker"],
+              "token-sell-ticker": event.pollParams["token-sell-ticker"],
+              "token-sell-amount": event.pollParams["token-sell-amount"],
+            });
+            console.log(`TRADE STATUS: ${JSON.stringify(tradeDetails, null, 2)}`);
+            const embed = getResolvePollEmbed(
+              event.pollParams,
+              { pollOutcome: true, transactionOutcome: tradeDetails },
+              reactionScores
+            );
+            await message.lineReplyNoMention(embed);
+          }
+          catch (e) {
+            await message.lineReplyNoMention(`Error: ${e.message}`);
+          }
         }
         // Else do nothing
         else {
           const embed = getResolvePollEmbed(
             event.pollParams,
-            false,
+            { pollOutcome: false },
             reactionScores
           );
           await message.lineReplyNoMention(embed);
         }
       }
-    });
+    };
   } else if (event.pollParams.pollType == "choose-token") {
   }
 
@@ -161,20 +169,22 @@ exports.resolvePoll = async function (event, context) {
   return true;
 };
 
-function executeEnzymeTrade() {
+function executeEnzymeTrade(tradeParams) {
   return new Promise((resolve, reject) => {
     const params = {
       FunctionName: process.env.ENZYME_EXECUTE_TRADE_FUNCTION_ARN,
-      Payload: JSON.stringify("HELLO"),
+      Payload: JSON.stringify(tradeParams),
     };
     lambda.invoke(params, (err, results) => {
       if (err) reject(err);
-      else resolve(results.Payload);
+      else resolve(JSON.parse(results.Payload));
     });
   });
 }
 
 function getResolvePollEmbed(pollParams, outcome, voteDetails) {
+  console.log("HEREE")
+  console.log(JSON.stringify(outcome, null, 2))
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
   const embed = new MessageEmbed()
     // Set the title of the field
@@ -190,12 +200,30 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
       },
       {
         name: "Outcome:",
-        value: outcome ? "Execute trade." : "Don't execute trade.",
-      },
-      {
-        name: "Trade succeeded?",
-        value: "Put trade status here"
-      },
+        value: outcome.pollOutcome ? "Execute trade." : "Don't execute trade.",
+      }
+    );
+    // If poll result was yes
+    if (outcome.pollOutcome) {
+      // If the lambda that executed the trade returned 200 status code
+      if (outcome.transactionOutcome.statusCode == 200) {
+        embed.addFields({
+          name: "Transaction Succeeded. TX Hash:",
+          value: `${
+            outcome.transactionOutcome.body.txHash
+          } [View on Etherscan](${
+            ETHERSCAN_TX_URL + outcome.transactionOutcome.body.txHash
+          })`,
+        });
+      }
+      else {
+        embed.addFields({
+          name: "Transaction Failed. Reason:",
+          value: outcome.transactionOutcome.body.message,
+        });
+      }
+    }
+    embed.addFields(
       { name: "\u200B", value: "\u200B" }, // Empty space
       {
         name: "Full vote details:",
@@ -351,13 +379,13 @@ async function getUsersThatReactedWith(message, emojis) {
 async function getSharesFromDiscordUserID(discordUserID) {
   // 1. Get all the authenticated addresses from the user
   const publicAddresses = await getDiscordUserPublicAddress(discordUserID);
-  console.log(`---->>>> HERE USER: ${discordUserID}`);
-  console.log(publicAddresses);
+  //console.log(`---->>>> HERE USER: ${discordUserID}`);
+  //console.log(publicAddresses);
 
   if (publicAddresses.Count > 0) {
     // 2. Get the latest address
     const publicAddress = getLatestAddress(publicAddresses.Items);
-    console.log(`LATEST ADDRESS: ${publicAddress}`);
+    //console.log(`LATEST ADDRESS: ${publicAddress}`);
     // 3. Call the enzyme API to get the balance of that address
     const url =
       process.env.ENZYME_API_ENDPOINT +
@@ -365,7 +393,7 @@ async function getSharesFromDiscordUserID(discordUserID) {
       process.env.VAULT_ADDRESS +
       "&investorAddress=" +
       publicAddress;
-    console.log(url);
+    //console.log(url);
 
     try {
       const response = await axios.get(url);
@@ -427,7 +455,7 @@ async function getReactionScores(userReactions) {
     (reactionsWithShares[i].score / totalShares * 100).toFixed(2);
   });
 
-  console.log(`TOTAL SHARES: ${totalShares}`);
+  //console.log(`TOTAL SHARES: ${totalShares}`);
 
   return reactionsWithShares;
 }

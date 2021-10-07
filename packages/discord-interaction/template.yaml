@@ -9,7 +9,7 @@ Globals:
     Runtime: nodejs14.x
     # Must return response for slash commands in 3 secs, but after the response
     # the lambda can keep running to do stuff that's missing
-    Timeout: 15
+    Timeout: 60
 
 Resources:
   #EventBridgeBus:
