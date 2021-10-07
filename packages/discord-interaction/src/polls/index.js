@@ -110,47 +110,41 @@ exports.resolvePoll = async function (event, context) {
 
   const userReactions = await getUsersThatReactedWith(message, ["👍", "👎"]);
   console.log(JSON.stringify(userReactions));
-  const reactionScores = await getReactionScores(userReactions);
+  const { winnerEmoji, reactionScores } = await getReactionScores(userReactions);
   console.log(JSON.stringify(reactionScores));
-  //await message.lineReplyNoMention(JSON.stringify(reactionScores));
+  await message.lineReplyNoMention(JSON.stringify(reactionScores));
 
   // Now, the way we will act upon the results will depend on the poll type:
   if (event.pollParams.pollType == "yes-no") {
-    // TODO merge the 2 objects in the array into a single one with emoji key
-    // to avoid doing this loop
-    for (reactions of reactionScores) {
-      if (reactions.emoji == "👍") {
-        // If we had a score for 👍 higher than 50, proceed with the trade
-        if (reactions.normalizedScore > 50.0) {
-          try{
-            const tradeDetails = await executeEnzymeTrade({
-              "token-buy-ticker": event.pollParams["token-buy-ticker"],
-              "token-sell-ticker": event.pollParams["token-sell-ticker"],
-              "token-sell-amount": event.pollParams["token-sell-amount"],
-            });
-            console.log(`TRADE STATUS: ${JSON.stringify(tradeDetails, null, 2)}`);
-            const embed = getResolvePollEmbed(
-              event.pollParams,
-              { pollOutcome: true, transactionOutcome: tradeDetails },
-              reactionScores
-            );
-            await message.lineReplyNoMention(embed);
-          }
-          catch (e) {
-            await message.lineReplyNoMention(`Error: ${e.message}`);
-          }
-        }
-        // Else do nothing
-        else {
-          const embed = getResolvePollEmbed(
-            event.pollParams,
-            { pollOutcome: false },
-            reactionScores
-          );
-          await message.lineReplyNoMention(embed);
-        }
+    // If we had a score for 👍 higher than 50, proceed with the trade
+    if (reactionScores["👍"].normalizedScore > 50.0) {
+      try {
+        const tradeDetails = await executeEnzymeTrade({
+          "token-buy-ticker": event.pollParams["token-buy-ticker"],
+          "token-sell-ticker": event.pollParams["token-sell-ticker"],
+          "token-sell-amount": event.pollParams["token-sell-amount"],
+        });
+        console.log(`TRADE STATUS: ${JSON.stringify(tradeDetails, null, 2)}`);
+        const embed = getResolvePollEmbed(
+          event.pollParams,
+          { pollOutcome: true, transactionOutcome: tradeDetails },
+          reactionScores
+        );
+        await message.lineReplyNoMention(embed);
+      } catch (e) {
+        await message.lineReplyNoMention(`Error: ${e.message}`);
       }
-    };
+    }
+    // Else do nothing
+    else {
+      const embed = getResolvePollEmbed(
+        event.pollParams,
+        { pollOutcome: false },
+        reactionScores
+      );
+      await message.lineReplyNoMention(embed);
+    }
+
   } else if (event.pollParams.pollType == "choose-token") {
   }
 
@@ -416,46 +410,81 @@ async function getReactionScores(userReactions) {
   // We have a nested map, and since Promise.all is not recursive, we need
   // to also enclose the outer map in a Promise.all
   //https://stackoverflow.com/questions/69457404/how-to-await-promise-function-inside-nested-maps/69457482#69457482
-  const reactionsWithShares = await Promise.all(
+  const reactionsWithSharesArr = await Promise.all(
     userReactions.map(async (reactions) => {
       return {
-        emoji: reactions.emoji,
-        shares: await Promise.all(
-          reactions.users
-            .filter((user) => {
-              // Don't consider the initial bot votes
-              return user.username !== "dao-treasury-management";
-            })
-            .map(async (user) => {
-              return {
-                username: user.username,
-                // Just as an example of something to wait for
-                shares: await getSharesFromDiscordUserID(user.id),
-              };
-            })
-        ),
+        [reactions.emoji]: {
+          shares: await Promise.all(
+            reactions.users
+              .filter((user) => {
+                // Don't consider the initial bot votes
+                return user.username !== "dao-treasury-management";
+              })
+              .map(async (user) => {
+                return {
+                  username: user.username,
+                  // Just as an example of something to wait for
+                  shares: await getSharesFromDiscordUserID(user.id),
+                };
+              })
+          ),
+        }
       };
     })
   );
   
+  console.log(JSON.stringify(reactionsWithSharesArr, null, 2));
+
+  // Merge the array of objects into a single object
+  var reactionsWithShares = reactionsWithSharesArr.reduce(function (
+    result,
+    currentObject
+  ) {
+    for (var key in currentObject) {
+      if (currentObject.hasOwnProperty(key)) {
+        result[key] = currentObject[key];
+      }
+    }
+    return result;
+  },
+  {});
+
+  console.log(JSON.stringify(reactionsWithShares, null, 2));
+
   // Count the share scores
   var totalShares = 0;
-  reactionsWithShares.forEach((reactions, i) => {
-    reactionsWithShares[i].score = 0;
-    reactions.shares.forEach((shares) => {
-      reactionsWithShares[i].score += shares.shares;
+  for (const [emoji, reactions] of Object.entries(reactionsWithShares)) {
+    reactionsWithShares[emoji].score = 0;
+    for (const shares of reactions.shares) {
+      reactionsWithShares[emoji].score += shares.shares;
       totalShares += shares.shares;
-    });
-  });
+    }
+  }
 
-  // Get the normalized scores
-  reactionsWithShares.forEach((reactions, i) => {
+  console.log(JSON.stringify(reactionsWithShares, null, 2));
+  console.log(totalShares)
+
+  var winnerEmoji = null;
+  var maxScore = 0;
+  // Get the normalized scores and also get the winner emoji
+  for (const [emoji, reactions] of Object.entries(reactionsWithShares)) {
     // Normalized scores are floats [0, 100], with 2 decimal places
-    reactionsWithShares[i].normalizedScore = 
-    (reactionsWithShares[i].score / totalShares * 100).toFixed(2);
-  });
+    reactionsWithShares[emoji].normalizedScore = (
+      (reactionsWithShares[emoji].score / totalShares) *
+      100
+    ).toFixed(3);
+    // Get the emoji with highest score
+    if (reactionsWithShares[emoji].score > maxScore) {
+      maxScore = reactionsWithShares[emoji].score;
+      winnerEmoji = emoji;
+    }
+  }
+
+  console.log(JSON.stringify(reactionsWithShares, null, 2));
+  console.log(winnerEmoji);
+  console.log(maxScore);
 
   //console.log(`TOTAL SHARES: ${totalShares}`);
 
-  return reactionsWithShares;
+  return {winnerEmoji, reactionScores: reactionsWithShares}
 }
