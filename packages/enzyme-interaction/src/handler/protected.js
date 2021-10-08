@@ -37,7 +37,7 @@ exports.executeTrade = async (event, context) => {
     const tradeDetails = await getTradeDetails(
       sellToken,
       buyToken,
-      event["token-sell-amount"]
+      event["token-sell-amount"].toString() //It's coming from discord as a decimal
     );
 
     // Here's how to convert the hex amount to decimal format:

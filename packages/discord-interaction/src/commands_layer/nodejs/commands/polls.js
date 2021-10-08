@@ -11,6 +11,33 @@ const file = fs.readFileSync("/tmp/.env");
 const envVariables = JSON.parse(file);
 const lambda = new Lambda();
 
+const TOKEN_CHOICES = [
+    {
+      name: "WETH",
+      value: "WETH",
+    },
+    {
+      name: "BAT",
+      value: "BAT",
+    },
+    {
+      name: "BNB",
+      value: "BNB",
+    },
+    {
+      name: "SNX",
+      value: "SNX",
+    },
+    {
+      name: "UNI",
+      value: "UNI",
+    },
+    {
+      name: "USDT",
+      value: "USDT",
+    },
+  ];
+
 module.exports = class PollCommand extends SlashCommand {
   constructor(creator) {
     super(creator, {
@@ -49,35 +76,10 @@ module.exports = class PollCommand extends SlashCommand {
               // Note: an option holds a maximum of 25 choices, so it's not feasible
               // to fetch all the available tokens to trade from the graph and dump them here.
               // To make all the tokens available, this field must be open-ended and receive a string.
-              choices: [
-                {
-                  name: "WETH",
-                  value: "WETH",
-                },
-                {
-                  name: "BAT",
-                  value: "BAT",
-                },
-                {
-                  name: "BNB",
-                  value: "BNB",
-                },
-                {
-                  name: "SNX",
-                  value: "SNX",
-                },
-                {
-                  name: "UNI",
-                  value: "UNI",
-                },
-                {
-                  name: "USDT",
-                  value: "USDT",
-                },
-              ],
+              choices: TOKEN_CHOICES,
             },
             {
-              type: CommandOptionType.STRING,
+              type: CommandOptionType.NUMBER, // decimal
               name: "token-sell-amount",
               description: "The amount of the token to sell (float/int).",
               required: true,
@@ -87,32 +89,7 @@ module.exports = class PollCommand extends SlashCommand {
               name: "token-buy-ticker",
               description: "The ticker of the token to buy (string).",
               required: true,
-              choices: [
-                {
-                  name: "WETH",
-                  value: "WETH",
-                },
-                {
-                  name: "BAT",
-                  value: "BAT",
-                },
-                {
-                  name: "BNB",
-                  value: "BNB",
-                },
-                {
-                  name: "SNX",
-                  value: "SNX",
-                },
-                {
-                  name: "UNI",
-                  value: "UNI",
-                },
-                {
-                  name: "USDT",
-                  value: "USDT",
-                },
-              ],
+              choices: TOKEN_CHOICES,
             },
           ],
         },
@@ -127,6 +104,56 @@ module.exports = class PollCommand extends SlashCommand {
               name: "duration",
               description: "The duration of the poll (in minutes).",
               required: true,
+            },
+            {
+              type: CommandOptionType.STRING,
+              name: "token-sell-ticker",
+              description: "The ticker of the token to sell (string).",
+              required: true,
+              choices: TOKEN_CHOICES,
+            },
+            {
+              type: CommandOptionType.NUMBER,
+              name: "token-sell-amount",
+              description: "The amount of the token to sell (float/int).",
+              required: true,
+            },
+            {
+              type: CommandOptionType.STRING,
+              name: "token-buy-ticker-1",
+              description: "Option 1 token to buy (string).",
+              required: true,
+              choices: TOKEN_CHOICES,
+            },
+            // Minimum 2 options
+            {
+              type: CommandOptionType.STRING,
+              name: "token-buy-ticker-2",
+              description: "Option 2 token to buy (string).",
+              required: true,
+              choices: TOKEN_CHOICES,
+            },
+            {
+              type: CommandOptionType.STRING,
+              name: "token-buy-ticker-3",
+              description: "Option 3 token to buy (string).",
+              required: false,
+              choices: TOKEN_CHOICES,
+            },
+            {
+              type: CommandOptionType.STRING,
+              name: "token-buy-ticker-4",
+              description: "Option 4 token to buy (string).",
+              required: false,
+              choices: TOKEN_CHOICES,
+            },
+            // Maximum 5 options
+            {
+              type: CommandOptionType.STRING,
+              name: "token-buy-ticker-5",
+              description: "Option 5 token to buy (string).",
+              required: false,
+              choices: TOKEN_CHOICES,
             },
           ],
         },

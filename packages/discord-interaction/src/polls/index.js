@@ -11,6 +11,19 @@ const client = new DiscordClient();
 
 const ETHERSCAN_TX_URL = "https://kovan.etherscan.io/tx/";
 
+const YES_NO_EMOJIS = {
+  yes: "👍",
+  no: "👎",
+};
+
+const NUMBER_EMOJIS = {
+  1: "1️⃣",
+  2: "2️⃣",
+  3: "3️⃣",
+  4: "4️⃣",
+  5: "5️⃣"
+}
+
 // Note: I'm using Discord.js v12.5.3 because v13 is only compatible with node 16.
 // Lambda currently only allows for node 14.
 
@@ -34,24 +47,53 @@ const waitForClient = () => {
 exports.startPoll = async function (event, context) {
   await waitForClient();
 
+  console.log(JSON.stringify(event, null, 2))
+
   const pollExpirationDate = getPollExpirationDate(event.pollParams.duration);
   // Create poll and add the vote reactions
-  const embed = getStartPollEmbed(event.pollParams, pollExpirationDate);
+  const pollVoteOptions = getPollVoteOptionsWithEmojis(event.pollParams);
+  const embed = getStartPollEmbed(
+    event.pollParams,
+    pollVoteOptions,
+    pollExpirationDate
+  );
   const message = await client.channels.cache.get(event.channelID).send(embed);
-  await addPollVoteReactions(message, event.pollParams);
+  await addPollVoteReactions(message, pollVoteOptions);
 
   // Schedule the votes counting and subsequent eventbridge clean-up
   await scheduleResultsCounting(
     message.id,
     event.channelID,
     event.pollParams,
+    pollVoteOptions,
     pollExpirationDate
   );
 
   return true;
 };
 
-function getStartPollEmbed(pollParams, pollExpirationDate) {
+// Get object with the poll options and respective emojis
+function getPollVoteOptionsWithEmojis(pollParams) {
+  if (pollParams.pollType == "yes-no") {
+    return {
+      yes: YES_NO_EMOJIS.yes,
+      no: YES_NO_EMOJIS.no,
+    };
+  } else if (pollParams.pollType == "choose-token") {
+    var pollVoteOptions = {};
+    for (const [key, value] of Object.entries(pollParams)) {
+      if (key.startsWith("token-buy-ticker-")) {
+        // The last char gives us the number of the option
+        const number = parseInt(key.charAt(key.length - 1));
+        // key is a ticker, value is an emoji
+        pollVoteOptions[value] = NUMBER_EMOJIS[number];
+      }
+    }
+    return pollVoteOptions;
+  }
+}
+
+function getStartPollEmbed(pollParams, pollVoteOptions, pollExpirationDate) {
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
   const embed = new MessageEmbed()
     // Set the title of the field
@@ -66,49 +108,68 @@ function getStartPollEmbed(pollParams, pollExpirationDate) {
         value: `${pollParams.duration} minutes`,
       },
       {
-        name: "Ticker of the token to sell:",
+        name: "Token to sell:",
         value: pollParams["token-sell-ticker"],
       },
       {
         name: "Amount of the token to sell:",
         value: pollParams["token-sell-amount"],
-      },
+      }
+    );
+  if (pollParams.pollType == "yes-no") {
+    embed.addFields(
       {
-        name: "Ticker of the token to buy:",
+        name: "Token to buy:",
         value: pollParams["token-buy-ticker"],
       },
       { name: "\u200B", value: "\u200B" }, // Empty space
-      { name: "Vote Yes", value: "👍", inline: true },
-      { name: "Vote No", value: "👎", inline: true },
-      { name: "\u200B", value: "\u200B" },
-    )
-    .setFooter(`Expires ${pollExpirationDate}`);
-  return embed
+      { name: "Vote Yes", value: pollVoteOptions.yes, inline: true },
+      { name: "Vote No", value: pollVoteOptions.no, inline: true },
+      { name: "\u200B", value: "\u200B" }
+    );
+  } else if (pollParams.pollType == "choose-token") {
+    //  Find how many option tokens there are:
+    tokenOptionsString = "";
+    for (const [ticker, emoji] of Object.entries(pollVoteOptions)) {
+      tokenOptionsString += `${emoji} : ${ticker}\n`;
+    }
+    embed.addFields({
+      name: "Option tokens to buy:",
+      value: tokenOptionsString,
+    });
+  }
+  embed.setFooter(`Expires ${pollExpirationDate}`);
+  return embed;
 }
 
-async function addPollVoteReactions(message, pollParams) {
-  if (pollParams.pollType === "yes-no") {
-    await message.react("👍");
-    await message.react("👎");
+async function addPollVoteReactions(message, pollVoteOptions) {
+  for (const [option, emoji] of Object.entries(pollVoteOptions)) {
+    await message.react(emoji);
   }
-  else if (pollParams.pollType === "choose-token") {
-  }
-  return true
+  return true;
 }
 
 exports.resolvePoll = async function (event, context) {
   await waitForClient();
 
   // DEBUG
-  //console.log(`CONTEXT ${JSON.stringify(context)}`);
-  //console.log(`EVENT ${JSON.stringify(event)}`);
+  console.log(`CONTEXT ${JSON.stringify(context)}`);
+  console.log(`EVENT ${JSON.stringify(event)}`);
   // DEBUG
 
   const message = await client.channels.cache
     .get(event.channelID)
     .messages.fetch(event.messageID);
 
-  const userReactions = await getUsersThatReactedWith(message, ["👍", "👎"]);
+  var emojiList = [];
+  for(const [key, emoji] of Object.entries(event.pollVoteOptions)) {
+    emojiList.push(emoji)
+  }
+
+  console.log("---> emojiList")
+  console.log(emojiList)
+
+  const userReactions = await getUsersThatReactedWith(message, emojiList);
   console.log(JSON.stringify(userReactions));
   const { winnerEmoji, reactionScores } = await getReactionScores(userReactions);
   console.log(JSON.stringify(reactionScores));
@@ -117,7 +178,7 @@ exports.resolvePoll = async function (event, context) {
   // Now, the way we will act upon the results will depend on the poll type:
   if (event.pollParams.pollType == "yes-no") {
     // If we had a score for 👍 higher than 50, proceed with the trade
-    if (reactionScores["👍"].normalizedScore > 50.0) {
+    if (reactionScores[YES_NO_EMOJIS.yes].normalizedScore > 50.0) {
       try {
         const tradeDetails = await executeEnzymeTrade({
           "token-buy-ticker": event.pollParams["token-buy-ticker"],
@@ -132,7 +193,7 @@ exports.resolvePoll = async function (event, context) {
         );
         await message.lineReplyNoMention(embed);
       } catch (e) {
-        await message.lineReplyNoMention(`Error: ${e.message}`);
+        await message.lineReplyNoMention(`Error: ${e.message.substring}`);
       }
     }
     // Else do nothing
@@ -177,8 +238,8 @@ function executeEnzymeTrade(tradeParams) {
 }
 
 function getResolvePollEmbed(pollParams, outcome, voteDetails) {
-  console.log("HEREE")
-  console.log(JSON.stringify(outcome, null, 2))
+  console.log("---> getResolvePollEmbed");
+  console.log(`Outcome: ${JSON.stringify(outcome, null, 2)}`)
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
   const embed = new MessageEmbed()
     // Set the title of the field
@@ -213,7 +274,8 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
       else {
         embed.addFields({
           name: "Transaction Failed. Reason:",
-          value: outcome.transactionOutcome.body.message,
+          // Maximum chars in embed field value is 1024, so truncating
+          value: outcome.transactionOutcome.body.message.substring(0, 1024),
         });
       }
     }
@@ -233,6 +295,7 @@ async function scheduleResultsCounting(
   messageID,
   channelID,
   pollParams,
+  pollVoteOptions,
   scheduleDate
 ) {
   const ruleName = `poll-results-rule-${uuidv1()}`;
@@ -272,6 +335,7 @@ async function scheduleResultsCounting(
               messageID,
               channelID,
               pollParams,
+              pollVoteOptions
             }),
           },
         ],
@@ -428,12 +492,16 @@ async function getReactionScores(userReactions) {
                 };
               })
           ),
-        }
+        },
       };
     })
   );
-  
-  console.log(JSON.stringify(reactionsWithSharesArr, null, 2));
+
+  console.log("-----> getReactionScores PROCESSING <------");
+
+  console.log(
+    `reactionsWithSharesArr: ${JSON.stringify(reactionsWithSharesArr, null, 2)}`
+  );
 
   // Merge the array of objects into a single object
   var reactionsWithShares = reactionsWithSharesArr.reduce(function (
@@ -449,7 +517,9 @@ async function getReactionScores(userReactions) {
   },
   {});
 
-  console.log(JSON.stringify(reactionsWithShares, null, 2));
+  console.log(
+    `reactionsWithShares: ${JSON.stringify(reactionsWithShares, null, 2)}`
+  );
 
   // Count the share scores
   var totalShares = 0;
@@ -461,9 +531,11 @@ async function getReactionScores(userReactions) {
     }
   }
 
-  console.log(JSON.stringify(reactionsWithShares, null, 2));
-  console.log(totalShares)
+  console.log(
+    `reactionsWithShares with scores: ${JSON.stringify(reactionsWithShares, null, 2)}`
+  );
 
+  // If scores are all zero, winnerEmoji will stay null
   var winnerEmoji = null;
   var maxScore = 0;
   // Get the normalized scores and also get the winner emoji
@@ -480,11 +552,13 @@ async function getReactionScores(userReactions) {
     }
   }
 
-  console.log(JSON.stringify(reactionsWithShares, null, 2));
-  console.log(winnerEmoji);
-  console.log(maxScore);
+  console.log(
+    `reactionsWithShares with normalized scored: ${JSON.stringify(reactionsWithShares, null, 2)}`
+  );
 
-  //console.log(`TOTAL SHARES: ${totalShares}`);
+  console.log(`TOTAL SHARES: ${totalShares}`);
+  console.log(`WINNER EMOJI: ${winnerEmoji}`);
+  console.log(`MAX SCORE: ${maxScore}`);
 
-  return {winnerEmoji, reactionScores: reactionsWithShares}
+  return { winnerEmoji, reactionScores: reactionsWithShares };
 }
