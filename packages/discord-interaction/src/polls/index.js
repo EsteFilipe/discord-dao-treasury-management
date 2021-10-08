@@ -100,8 +100,14 @@ function getStartPollEmbed(pollParams, pollVoteOptions, pollExpirationDate) {
     .setTitle("DAO Treasury Poll")
     // Set the color of the embed
     .setColor(0xff0000)
-    // Set the main content of the embed
-    .setDescription("Yes/No vote for the following trade parameters.")
+  if (pollParams.pollType == "yes-no") {
+    embed.setDescription("Yes/No vote for the following trade parameters.")
+  }
+  else if (pollParams.pollType == "choose-token") {
+    embed.setDescription("Choose-token vote for the following trade parameters.");
+  }
+  
+  embed
     .addFields(
       {
         name: "Poll Duration:",
