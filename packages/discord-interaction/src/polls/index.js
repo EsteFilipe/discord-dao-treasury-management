@@ -175,39 +175,75 @@ exports.resolvePoll = async function (event, context) {
   console.log(JSON.stringify(reactionScores));
   await message.lineReplyNoMention(JSON.stringify(reactionScores));
 
-  // Now, the way we will act upon the results will depend on the poll type:
-  if (event.pollParams.pollType == "yes-no") {
-    // If we had a score for 👍 higher than 50, proceed with the trade
-    if (reactionScores[YES_NO_EMOJIS.yes].normalizedScore > 50.0) {
-      try {
-        const tradeDetails = await executeEnzymeTrade({
-          "token-buy-ticker": event.pollParams["token-buy-ticker"],
-          "token-sell-ticker": event.pollParams["token-sell-ticker"],
-          "token-sell-amount": event.pollParams["token-sell-amount"],
-        });
-        console.log(`TRADE STATUS: ${JSON.stringify(tradeDetails, null, 2)}`);
-        const embed = getResolvePollEmbed(
-          event.pollParams,
-          { pollOutcome: true, transactionOutcome: tradeDetails },
-          reactionScores
-        );
-        await message.lineReplyNoMention(embed);
-      } catch (e) {
-        await message.lineReplyNoMention(`Error: ${e.message.substring}`);
+
+  var outcome,
+    tokenBuyTicker;
+
+  if (winnerEmoji === null) {
+    outcome = {
+      pollOutcome: false,
+      pollOutcomeMessage: "There were no votes - don't execute trade.",
+    };
+  } 
+  else if (winnerEmoji === "TIE") {
+    outcome = {
+      pollOutcome: false,
+      pollOutcomeMessage: "There's been a tie - don't execute trade.",
+    };
+  } 
+  else {
+    // For yes-no, trade will only be executed if yes wins
+    if (event.pollParams.pollType == "yes-no") {
+      if (winnerEmoji === YES_NO_EMOJIS.yes) {
+        outcome = { 
+          pollOutcome: true,
+          pollOutcomeMessage: "'Yes' won - execute trade." 
+        };
+      }
+      else {
+        outcome = {
+          pollOutcome: false,
+          pollOutcomeMessage: "'No' won - don't execute trade.",
+        };
       }
     }
-    // Else do nothing
-    else {
-      const embed = getResolvePollEmbed(
-        event.pollParams,
-        { pollOutcome: false },
-        reactionScores
+    // For choose-token, if there's a winner the trade will be executed
+    else if (event.pollParams.pollType == "choose-token") {
+      outcome = { pollOutcome: true };
+    }
+  }
+
+  if (outcome.pollOutcome) {
+    if (event.pollParams.pollType == "yes-no") {
+      tokenBuyTicker = event.pollParams["token-buy-ticker"];
+    }
+    else if (event.pollParams.pollType == "choose-token") {
+      // Get the ticker of the token with the highest score
+      // First, get the index corresponding to that emoji
+      const winnerEmojiIndex = Object.keys(NUMBER_EMOJIS).find(
+        (key) => NUMBER_EMOJIS[key] === winnerEmoji
       );
-      await message.lineReplyNoMention(embed);
+      // Finally, get the ticker associated with that option
+      tokenBuyTicker = event.pollParams[`token-buy-ticker-${winnerEmojiIndex}`];
+      outcome.pollOutcomeMessage = `Buy ${tokenBuyTicker}`;
     }
 
-  } else if (event.pollParams.pollType == "choose-token") {
+    outcome.transactionOutcome = await executeEnzymeTrade({
+      "token-buy-ticker": tokenBuyTicker,
+      "token-sell-ticker": event.pollParams["token-sell-ticker"],
+      "token-sell-amount": event.pollParams["token-sell-amount"],
+    });   
   }
+
+  await message.lineReplyNoMention(`OUTCOME: ${JSON.stringify(outcome)}`);
+
+  const embed = getResolvePollEmbed(
+    event.pollParams,
+    outcome,
+    reactionScores
+  );
+
+  await message.lineReplyNoMention(embed);
 
   // Clean up
   await Promise.all([
@@ -239,54 +275,66 @@ function executeEnzymeTrade(tradeParams) {
 
 function getResolvePollEmbed(pollParams, outcome, voteDetails) {
   console.log("---> getResolvePollEmbed");
-  console.log(`Outcome: ${JSON.stringify(outcome, null, 2)}`)
+  console.log(`Outcome: ${JSON.stringify(outcome, null, 2)}`);
   // https://discord.js.org/#/docs/main/master/class/MessageEmbed
   const embed = new MessageEmbed()
     // Set the title of the field
     .setTitle("DAO Treasury Poll Results")
     // Set the color of the embed
-    .setColor(0x0000ff)
-    // Set the main content of the embed
+    .setColor(0x0000ff);
+  // Set the main content of the embed
   if (pollParams.pollType == "yes-no") {
     embed.setDescription("Yes/No vote").addFields(
       {
         name: "Parameters:",
         value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for ${pollParams["token-buy-ticker"]}.`,
-      },
-      {
-        name: "Outcome:",
-        value: outcome.pollOutcome ? "Execute trade." : "Don't execute trade.",
-      }
-    );
-    // If poll result was yes
-    if (outcome.pollOutcome) {
-      // If the lambda that executed the trade returned 200 status code
-      if (outcome.transactionOutcome.statusCode == 200) {
-        embed.addFields({
-          name: "Transaction Succeeded. TX Hash:",
-          value: `${
-            outcome.transactionOutcome.body.txHash
-          } [View on Etherscan](${
-            ETHERSCAN_TX_URL + outcome.transactionOutcome.body.txHash
-          })`,
-        });
-      }
-      else {
-        embed.addFields({
-          name: "Transaction Failed. Reason:",
-          // Maximum chars in embed field value is 1024, so truncating
-          value: outcome.transactionOutcome.body.message.substring(0, 1024),
-        });
-      }
-    }
-    embed.addFields(
-      { name: "\u200B", value: "\u200B" }, // Empty space
-      {
-        name: "Full vote details:",
-        value: JSON.stringify(voteDetails, null, 2),
       }
     );
   }
+  else if (pollParams.pollType == "choose-token") {
+    buyTokenOptionsString = "";
+    for (const [key, value] of Object.entries(pollParams)) {
+      if (key.startsWith("token-buy-ticker-")) {
+        buyTokenOptionsString += `- ${value}\n`;
+      }
+    }
+    embed.setDescription("Choose-token vote").addFields({
+      name: "Parameters:",
+      value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for one of the following:\n${buyTokenOptionsString}`,
+    });
+  }
+
+  embed.addFields({
+    name: "Poll Outcome:",
+    value: outcome.pollOutcomeMessage,
+  });
+
+  // If poll result was yes
+  if (outcome.pollOutcome) {
+    // If the lambda that executed the trade returned 200 status code
+    if (outcome.transactionOutcome.statusCode == 200) {
+      embed.addFields({
+        name: "Transaction Succeeded. TX Hash:",
+        value: `${outcome.transactionOutcome.body.txHash} [View on Etherscan](${
+          ETHERSCAN_TX_URL + outcome.transactionOutcome.body.txHash
+        })`,
+      });
+    } else {
+      embed.addFields({
+        name: "Transaction Failed. Reason:",
+        // Maximum chars in embed field value is 1024, so truncating
+        value: outcome.transactionOutcome.body.message.substring(0, 1024),
+      });
+    }
+  }
+
+  embed.addFields(
+    { name: "\u200B", value: "\u200B" }, // Empty space
+    {
+      name: "Full vote details:",
+      value: JSON.stringify(voteDetails, null, 2),
+    }
+  );
   return embed;
 }
 
@@ -298,6 +346,10 @@ async function scheduleResultsCounting(
   pollVoteOptions,
   scheduleDate
 ) {
+  // NOTE: something odd happens when the scheduling happens for the next minute when 
+  // the current minute is in its' final seconds - despite being scheduled correctly,
+  // event bridge doesn't trigger the lambda when the time comes, for some reason.
+  // There's likely some delay on their side (hence why they don't even allow seconds resolution for the cron)
   const ruleName = `poll-results-rule-${uuidv1()}`;
   const cronExpression = getScheduleCron(scheduleDate);
   // Create EventBridge rule
@@ -552,6 +604,24 @@ async function getReactionScores(userReactions) {
     }
   }
 
+  // There's also the possibility of tie (although extremely slim since we have so many decimal places), 
+  // in which case the trade won't go through
+  // Check only if there was at least a vote
+  if (winnerEmoji !== null) {
+    var allScores = []
+    for (const [emoji, reactions] of Object.entries(reactionsWithShares)) {
+      allScores.push(reactions.score); 
+    }
+    // Check how many times the max score occured
+    var maxScoreOccurrences = allScores.filter(function (val) {
+      return val === maxScore;
+    }).length;
+    if (maxScoreOccurrences > 1) {
+      // In the event of tie, winnerEmoji will be assigned the value "TIE"
+      winnerEmoji = "TIE";
+    }
+  }
+
   console.log(
     `reactionsWithShares with normalized scored: ${JSON.stringify(reactionsWithShares, null, 2)}`
   );
@@ -561,4 +631,8 @@ async function getReactionScores(userReactions) {
   console.log(`MAX SCORE: ${maxScore}`);
 
   return { winnerEmoji, reactionScores: reactionsWithShares };
+}
+
+function hasDuplicates(array) {
+  return new Set(array).size !== array.length;
 }
