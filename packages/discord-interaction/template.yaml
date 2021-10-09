@@ -61,10 +61,15 @@ Resources:
       CodeUri: ./src/command_handler
       Description: "Serverless Function to handle incoming Discord requests"
       Handler: index.lambdaHandler
-      # This Lambda will send the poll message and schedule the counting
       Policies:
-        - LambdaInvokePolicy: 
-            FunctionName: !Ref DiscordPollStartFunction
+      - Statement:
+        - Sid: LambdaInvokePolicy
+          Effect: Allow
+          Action:
+            - lambda:InvokeFunction
+          Resource: 
+            - !GetAtt DiscordTreasuryInfoFunction.Arn
+            - !GetAtt DiscordPollStartFunction.Arn
       Events:
         EthAuth:
           Type: HttpApi
@@ -99,6 +104,31 @@ Resources:
           DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
           DISCORD_SERVER_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:server_id}}'
           DISCORD_CHANNEL_ID: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:channel_id}}'
+  
+  # Ideally this function would not exist, if defer() worked on lambda for slash-create
+  DiscordTreasuryInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: discord-treasury-info
+      CodeUri: ./src/treasury_info
+      Description: >
+        Serverless Function to return treasury info about a certain field after being invoked through a slash command
+      Handler: index.treasuryInfo
+      # TODO will need permission here to call enzyme-interaction API
+      Policies:
+      - Statement:
+        - Sid: DynamoAccessPolicy
+          Effect: Allow
+          Action:
+            - dynamodb:Scan
+          Resource:
+            - !ImportValue 'dev-scaffold-eth-infra-TableArn'
+      Environment:
+        Variables:
+          DISCORD_BOT_TOKEN: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:bot_token}}'
+          VAULT_ADDRESS: '{{resolve:secretsmanager:/dev/discord_dao_treasury_bot/discord:SecretString:vault_address}}'
+          ENZYME_API_ENDPOINT: !ImportValue 'EnzymeInteractionApi'
+          DYNAMODB_TABLE: !ImportValue 'dev-scaffold-eth-infra-TableName'
         
   DiscordPollStartFunction:
     Type: AWS::Serverless::Function

@@ -290,14 +290,11 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
     .setColor(0x0000ff);
   // Set the main content of the embed
   if (pollParams.pollType == "yes-no") {
-    embed.setDescription("Yes/No Poll").addFields(
-      {
-        name: "Parameters:",
-        value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for ${pollParams["token-buy-ticker"]}.`,
-      }
-    );
-  }
-  else if (pollParams.pollType == "choose-token") {
+    embed.setDescription("Yes/No Poll").addFields({
+      name: "Parameters:",
+      value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for ${pollParams["token-buy-ticker"]}.`,
+    });
+  } else if (pollParams.pollType == "choose-token") {
     buyTokenOptionsString = "";
     for (const [key, value] of Object.entries(pollParams)) {
       if (key.startsWith("token-buy-ticker-")) {
@@ -338,6 +335,10 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
     { name: "\u200B", value: "------------------" }, // Empty space
     { name: "Full vote details:", value: "\u200B" } // Empty space
   );
+  // IMPORTANT NOTE:
+  // Adding fields like this doesn't scale, as the maximum of fields in an embed is 25
+  // https://discordjs.guide/popular-topics/embeds.html#editing-the-embedded-message-content
+  // Just showing like this for prototype purposes
   for (const [emoji, reactions] of Object.entries(voteDetails)) {
     embed.addFields(
       {
@@ -352,12 +353,10 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
       }
     );
     for (const user of reactions.users) {
-      embed.addFields(
-        {
-          name: `${user.username}`,
-          value: `Shares owned: ${user.shares.toFixed(5)}`,
-        }
-      );
+      embed.addFields({
+        name: `${user.username}`,
+        value: `Shares owned: ${user.shares.toFixed(5)}`,
+      });
     }
     embed.addFields(
       { name: "\u200B", value: "\u200B" } // Empty space

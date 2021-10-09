@@ -10,10 +10,11 @@ const JWT_EXPIRATION_TIME = "30m";
 module.exports = class AuthCommand extends SlashCommand {
 	constructor(creator) {
 			super(creator, {
-				name: "authenticate",
-				description: "Authenticate your wallet address - for vault share owners or for the vault manager",
-				guildIDs: [envVariables.DISCORD_SERVER_ID],
-			});
+        name: "authenticate",
+        description:
+          "🔑 Authenticate your wallet address - for investors or for the treasury manager.",
+        guildIDs: [envVariables.DISCORD_SERVER_ID],
+      });
 			this.filePath = __filename;
 	}
 
@@ -21,6 +22,7 @@ module.exports = class AuthCommand extends SlashCommand {
 		const token = jwt.sign(
 			{ 
 				userId: ctx.user.id,
+        username: ctx.user.username,
 				vaultAddress: envVariables.VAULT_ADDRESS
 			},
 				envVariables.JWT_SECRET, 

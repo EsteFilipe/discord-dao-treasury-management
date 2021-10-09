@@ -68,16 +68,17 @@ export const updateNonce = async (params: { publicAddress: string }) => {
 }
 
 export const updateEnzymeAuthenticated = async (params: 
-  { publicAddress: string, discordUserID: string, owner: boolean, shares: number }) => {
+  { publicAddress: string, discordUserID: string, discordUsername: string, owner: boolean, shares: number }) => {
   const queryParams: DynamoDB.DocumentClient.UpdateItemInput = {
     TableName: tableName,
     Key: {
       PublicAddress: params.publicAddress,
     },
-    UpdateExpression: 'SET Authenticated = :authenticated, DiscordUserID = :discordUserID, VaultOwner = :owner, VaultShares = :shares, UpdatedAt = :currentDate',
+    UpdateExpression: 'SET Authenticated = :authenticated, DiscordUserID = :discordUserID, DiscordUsername = :discordUsername, VaultOwner = :owner, VaultShares = :shares, UpdatedAt = :currentDate',
     ExpressionAttributeValues: {
       ':authenticated': true,
       ':discordUserID': params.discordUserID,
+      ':discordUsername': params.discordUsername,
       ':owner': params.owner,
       ':shares': params.shares,
       ':currentDate': new Date().toISOString()

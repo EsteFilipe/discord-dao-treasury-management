@@ -60,7 +60,7 @@ module.exports = class PollCommand extends SlashCommand {
           type: CommandOptionType.SUB_COMMAND,
           name: "yes-no",
           description:
-            "A poll to decide whether or not a specific trade should be executed.",
+            "🗳️ A poll to decide whether or not a specific trade should be executed.",
           options: [
             {
               type: CommandOptionType.INTEGER,
@@ -97,7 +97,7 @@ module.exports = class PollCommand extends SlashCommand {
           type: CommandOptionType.SUB_COMMAND,
           name: "choose-token",
           description:
-            "A poll with multiple token options to buy with a specific amount of WETH.",
+            "📊 A poll where the token to sell is defined, and the investors choose which token to buy.",
           options: [
             {
               type: CommandOptionType.INTEGER,

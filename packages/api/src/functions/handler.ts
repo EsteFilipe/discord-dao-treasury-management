@@ -128,6 +128,7 @@ export async function login(
     // and get the respective Discord user ID and Enzyme vault address
     const decoded = jwt.verify(userIdToken, process.env.JWT_SECRET);
     const discordUserID = decoded.userId;
+    const discordUsername = decoded.username;
 
     const token = await authenticate(publicAddress, signature, discordUserID)
 
@@ -176,7 +177,7 @@ export async function login(
         // to return consistent types, but I'm running short on time.
         const owner = !!isOwner;
         // TODO Possible to parallelize this with the calls to avoid wasting time
-        await updateEnzymeAuthenticated({ publicAddress, discordUserID, owner, shares });
+        await updateEnzymeAuthenticated({ publicAddress, discordUserID, discordUsername, owner, shares });
         return apiResponses._200({ shares: shares, owner: isOwner })
       }
     }

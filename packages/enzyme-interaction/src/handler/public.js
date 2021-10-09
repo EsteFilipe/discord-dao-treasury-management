@@ -31,6 +31,7 @@ exports.getVaultInfo = async (event, context) => {
     const investorAddress = parameters["investorAddress"];
     const vault = new VaultLib(vaultAddress, randomWallet);
     const balance = await vault.balanceOf(investorAddress);
+    console.log(`investorAddress: ${investorAddress}; shares: ${balance}`);
     return {
       statusCode: 200,
       body: JSON.stringify({
