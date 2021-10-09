@@ -12,7 +12,7 @@ module.exports = class AuthCommand extends SlashCommand {
 			super(creator, {
         name: "authenticate",
         description:
-          "🔑 Authenticate your wallet address - for investors or for the treasury manager.",
+          "🔑 Authenticate your wallet address - for investors or the treasury manager.",
         guildIDs: [envVariables.DISCORD_SERVER_ID],
       });
 			this.filePath = __filename;

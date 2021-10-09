@@ -179,7 +179,7 @@ exports.resolvePoll = async function (event, context) {
   console.log(JSON.stringify(userReactions));
   const { winnerEmoji, reactionScores } = await getReactionScores(userReactions);
   console.log(JSON.stringify(reactionScores));
-  await message.lineReplyNoMention(JSON.stringify(reactionScores));
+  //await message.lineReplyNoMention(JSON.stringify(reactionScores));
 
 
   var outcome,
@@ -241,7 +241,7 @@ exports.resolvePoll = async function (event, context) {
     });   
   }
 
-  await message.lineReplyNoMention(`OUTCOME: ${JSON.stringify(outcome)}`);
+  //await message.lineReplyNoMention(`OUTCOME: ${JSON.stringify(outcome)}`);
 
   const embed = getResolvePollEmbed(
     event.pollParams,
