@@ -101,10 +101,10 @@ function getStartPollEmbed(pollParams, pollVoteOptions, pollExpirationDate) {
     // Set the color of the embed
     .setColor(0xff0000)
   if (pollParams.pollType == "yes-no") {
-    embed.setDescription("Yes/No vote for the following trade parameters.")
+    embed.setDescription("Yes/No Poll for the following trade parameters:")
   }
   else if (pollParams.pollType == "choose-token") {
-    embed.setDescription("Choose-token vote for the following trade parameters.");
+    embed.setDescription("Choose-token Poll for the following trade parameters:");
   }
   
   embed
@@ -290,7 +290,7 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
     .setColor(0x0000ff);
   // Set the main content of the embed
   if (pollParams.pollType == "yes-no") {
-    embed.setDescription("Yes/No vote").addFields(
+    embed.setDescription("Yes/No Poll").addFields(
       {
         name: "Parameters:",
         value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for ${pollParams["token-buy-ticker"]}.`,
@@ -304,7 +304,7 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
         buyTokenOptionsString += `- ${value}\n`;
       }
     }
-    embed.setDescription("Choose-token vote").addFields({
+    embed.setDescription("Choose-Token Poll.").addFields({
       name: "Parameters:",
       value: `Trade ${pollParams["token-sell-amount"]} ${pollParams["token-sell-ticker"]} for one of the following:\n${buyTokenOptionsString}`,
     });
@@ -335,12 +335,34 @@ function getResolvePollEmbed(pollParams, outcome, voteDetails) {
   }
 
   embed.addFields(
-    { name: "\u200B", value: "\u200B" }, // Empty space
-    {
-      name: "Full vote details:",
-      value: JSON.stringify(voteDetails, null, 2),
-    }
+    { name: "\u200B", value: "------------------" }, // Empty space
+    { name: "Full vote details:", value: "\u200B" } // Empty space
   );
+  for (const [emoji, reactions] of Object.entries(voteDetails)) {
+    embed.addFields(
+      {
+        name: `-> Option ${emoji}`,
+        value: `Score: ${reactions.score.toFixed(5)}; Normalized Score: ${
+          reactions.normalizedScore
+        }\n`,
+      },
+      {
+        name: `----`,
+        value: `Users who voted for this option:`,
+      }
+    );
+    for (const user of reactions.users) {
+      embed.addFields(
+        {
+          name: `${user.username}`,
+          value: `Shares owned: ${user.shares.toFixed(5)}`,
+        }
+      );
+    }
+    embed.addFields(
+      { name: "\u200B", value: "\u200B" } // Empty space
+    );
+  }
   return embed;
 }
 
@@ -536,7 +558,7 @@ async function getReactionScores(userReactions) {
     userReactions.map(async (reactions) => {
       return {
         [reactions.emoji]: {
-          shares: await Promise.all(
+          users: await Promise.all(
             reactions.users
               .filter((user) => {
                 // Don't consider the initial bot votes
@@ -583,9 +605,9 @@ async function getReactionScores(userReactions) {
   var totalShares = 0;
   for (const [emoji, reactions] of Object.entries(reactionsWithShares)) {
     reactionsWithShares[emoji].score = 0;
-    for (const shares of reactions.shares) {
-      reactionsWithShares[emoji].score += shares.shares;
-      totalShares += shares.shares;
+    for (const user of reactions.users) {
+      reactionsWithShares[emoji].score += user.shares;
+      totalShares += user.shares;
     }
   }
 
